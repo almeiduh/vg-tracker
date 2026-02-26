@@ -3,9 +3,16 @@ import { Gamepad2, CalendarClock } from 'lucide-react';
 import { GameProvider } from './contexts/GameContext';
 import { Dashboard } from './components/Dashboard';
 import { Timeline } from './components/Timeline';
+import { getPlatforms } from './lib/rawg';
+import { useEffect } from 'react';
 import './index.css';
 
 function App() {
+  useEffect(() => {
+    // Warm up the platforms cache on initial application load
+    getPlatforms().catch(console.error);
+  }, []);
+
   return (
     <GameProvider>
       <BrowserRouter>

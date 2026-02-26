@@ -7,7 +7,7 @@ const mockGame: Game = {
     id: '123',
     title: 'Test Game Title',
     status: 'Playing',
-    genre: 'RPG',
+    genres: ['RPG'],
     platform: 'PlayStation 5',
     rating: 9,
     purchasing_price: 60,
@@ -15,6 +15,7 @@ const mockGame: Game = {
     start_date: '2023-01-01',
     end_date: null,
     hours_played: 45.5,
+    cover_url: 'https://example.com/cover.jpg'
 };
 
 describe('GameCard', () => {
@@ -28,6 +29,11 @@ describe('GameCard', () => {
         expect(screen.getByText('Test Game Title')).toBeInTheDocument();
         expect(screen.getByText('RPG')).toBeInTheDocument();
         expect(screen.getByText('PlayStation 5')).toBeInTheDocument();
+
+        // Cover Image
+        const coverImage = screen.getByAltText('Test Game Title');
+        expect(coverImage).toBeInTheDocument();
+        expect(coverImage).toHaveAttribute('src', 'https://example.com/cover.jpg');
 
         // Status Badge
         expect(screen.getByText('Playing')).toBeInTheDocument();

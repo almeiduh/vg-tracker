@@ -1,10 +1,56 @@
 .game-card {
     display: flex;
     flex-direction: column;
-    padding: 1.25rem;
+    padding: 0;
     background-color: var(--bg-surface);
     position: relative;
     overflow: hidden;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal), background-color var(--transition-normal);
+}
+
+.game-card.has-cover {
+    display: grid;
+    grid-template-rows: 200px 1fr;
+}
+
+@media (min-width: 640px) {
+    .game-card.has-cover {
+        grid-template-rows: auto;
+        grid-template-columns: 180px 1fr;
+    }
+}
+
+.game-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    background-color: var(--glass-bg-hover);
+}
+
+.game-card-cover-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.game-card-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+}
+
+.game-card:hover .game-card-cover {
+    transform: scale(1.05);
+}
+
+.game-card-content {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--spacing-md);
+    width: 100%;
 }
 
 /* Subtle accent line at the top of the card */
