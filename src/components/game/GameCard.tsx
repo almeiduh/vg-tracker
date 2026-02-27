@@ -31,6 +31,16 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
     const isPlayingOrOnHold = game.status === 'Playing' || game.status === 'On Hold';
     const isBacklog = game.status === 'Backlog';
 
+    const getDaysPlayed = () => {
+        if (!game.start_date || isBacklog) return null;
+        const start = new Date(game.start_date);
+        start.setHours(0, 0, 0, 0);
+        const end = game.end_date ? new Date(game.end_date) : new Date();
+        end.setHours(0, 0, 0, 0);
+        return Math.max(0, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    };
+    const daysPlayed = getDaysPlayed();
+
     const platformConfig = getPlatformConfig(game.platform);
     const PlatformIcon = platformConfig.icon;
 
@@ -112,6 +122,16 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
                             <div className="stat-content">
                                 <span className="stat-label">Finished</span>
                                 <span className="stat-value">{formatDate(game.end_date)}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {!isBacklog && daysPlayed !== null && (
+                        <div className="stat-item">
+                            <Calendar size={14} className="stat-icon" />
+                            <div className="stat-content">
+                                <span className="stat-label">Days played</span>
+                                <span className="stat-value">{daysPlayed}</span>
                             </div>
                         </div>
                     )}

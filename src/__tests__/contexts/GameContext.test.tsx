@@ -17,7 +17,7 @@ vi.mock('../../lib/supabase', () => ({
 
 const mockGames = [
     { id: '1', title: 'Game 1', status: 'Playing', genres: ['RPG'], platform: 'PC' },
-    { id: '2', title: 'Game 2', status: 'Backlog', genres: ['Action'], platform: 'PS5' }
+    { id: '2', title: 'Game 2', status: 'Backlog', genres: ['Action'], platform: 'PlayStation 5' }
 ];
 
 describe('GameContext', () => {

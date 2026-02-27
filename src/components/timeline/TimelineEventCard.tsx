@@ -38,6 +38,16 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onE
     const isFinished = type === 'finished';
     const eventLabel = isFinished ? 'Finished' : 'Started';
 
+    const getDaysPlayed = () => {
+        if (!game.start_date || game.status === 'Backlog') return null;
+        const start = new Date(game.start_date);
+        start.setHours(0, 0, 0, 0);
+        const end = game.end_date ? new Date(game.end_date) : new Date();
+        end.setHours(0, 0, 0, 0);
+        return Math.max(0, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    };
+    const daysPlayed = getDaysPlayed();
+
     return (
         <article className={`timeline-event-card timeline-event-card--${type}`}>
             {/* Cover thumbnail */}
@@ -87,6 +97,12 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onE
                             <span className="timeline-badge">
                                 <Clock size={14} />
                                 {game.hours_played}h
+                            </span>
+                        )}
+                        {daysPlayed !== null && (
+                            <span className="timeline-badge">
+                                <Calendar size={14} />
+                                {daysPlayed} {daysPlayed === 1 ? 'day' : 'days'}
                             </span>
                         )}
                     </div>
