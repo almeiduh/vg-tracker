@@ -32,7 +32,7 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
         status: 'Backlog' as GameStatus,
         purchasing_price: '',
         selling_price: '',
-        start_date: '',
+        start_date: new Date().toISOString().split('T')[0],
         end_date: '',
         hours_played: '',
         cover_url: '' as string | null
@@ -192,15 +192,41 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
             if (formData.genres.length === 0) throw new Error('At least one genre is required');
             if (!formData.platform.trim()) throw new Error('Platform is required');
 
+            if (formData.start_date === '') throw new Error('Start date is required');
+            if (formData.purchasing_price === '') throw new Error('Purchasing price is required');
+            if (formData.selling_price === '') throw new Error('Selling price is required');
+
+            const parsedRating = formData.rating === '' ? null : Number(formData.rating);
+            const parsedPurchasingPrice = Number(formData.purchasing_price);
+            const parsedSellingPrice = Number(formData.selling_price);
+
+            if (parsedPurchasingPrice < 0) {
+                throw new Error('Purchasing price must be greater than or equal to 0');
+            }
+            if (parsedSellingPrice < 0) {
+                throw new Error('Selling price must be greater than or equal to 0');
+            }
+
+            let startIso = null;
+            if (formData.start_date !== '') {
+                const startDate = new Date(formData.start_date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Ignore time variations for date comparison
+                if (startDate > today) {
+                    throw new Error('Start date cannot be in the future');
+                }
+                startIso = startDate.toISOString();
+            }
+
             await onSubmit({
                 title: formData.title.trim(),
                 genres: formData.genres,
                 platform: formData.platform.trim(),
                 status: formData.status,
-                rating: formData.rating === '' ? null : Number(formData.rating),
-                purchasing_price: formData.purchasing_price === '' ? null : Number(formData.purchasing_price),
-                selling_price: formData.selling_price === '' ? null : Number(formData.selling_price),
-                start_date: formData.start_date === '' ? null : new Date(formData.start_date).toISOString(),
+                rating: parsedRating,
+                purchasing_price: parsedPurchasingPrice,
+                selling_price: parsedSellingPrice,
+                start_date: startIso,
                 end_date: formData.end_date === '' ? null : new Date(formData.end_date).toISOString(),
                 hours_played: formData.hours_played === '' ? null : Number(formData.hours_played),
                 cover_url: formData.cover_url
@@ -324,29 +350,33 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 />
 
                 <Input
-                    label="Purchasing Price (€)"
+                    label="Purchasing Price (€) *"
                     name="purchasing_price"
                     type="number"
                     step="0.01"
                     min="0"
+                    required
                     value={formData.purchasing_price}
                     onChange={handleChange}
                 />
 
                 <Input
-                    label="Selling Price (€)"
+                    label="Selling Price (€) *"
                     name="selling_price"
                     type="number"
                     step="0.01"
                     min="0"
+                    required
                     value={formData.selling_price}
                     onChange={handleChange}
                 />
 
                 <Input
-                    label="Start Date"
+                    label="Start Date *"
                     name="start_date"
                     type="date"
+                    required
+                    max={new Date().toISOString().split('T')[0]}
                     value={formData.start_date}
                     onChange={handleChange}
                 />

@@ -62,13 +62,20 @@ export const GenreMultiSelect: React.FC<GenreMultiSelectProps> = ({
             {label && (
                 <label htmlFor={triggerId} className="input-label">{label}</label>
             )}
-            <button
-                type="button"
+            <div
                 id={triggerId}
                 className={`genre-select-trigger ${isOpen ? 'open' : ''}`}
                 onClick={() => setIsOpen(prev => !prev)}
+                role="combobox"
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setIsOpen(prev => !prev);
+                    }
+                }}
             >
                 {value.length === 0 ? (
                     <span className="genre-select-placeholder">Select genres…</span>
@@ -87,7 +94,7 @@ export const GenreMultiSelect: React.FC<GenreMultiSelectProps> = ({
                         </span>
                     ))
                 )}
-            </button>
+            </div>
 
             {isOpen && (
                 <div className="genre-dropdown-panel" role="listbox" aria-multiselectable="true">

@@ -121,3 +121,157 @@ describe('GameForm GenreMultiSelect', () => {
         expect(screen.getByText('Select genres…')).toBeInTheDocument();
     });
 });
+
+describe('GameForm Validations', () => {
+    it('shows error if purchasing price is negative', async () => {
+        const onSubmit = vi.fn();
+        const onCancel = vi.fn();
+
+        (rawgService.getPlatforms as any).mockResolvedValue(['PC']);
+        (rawgService.getGenres as any).mockResolvedValue(['Action']);
+
+        render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
+
+        // Wait for required data
+        await waitFor(() => {
+            expect(rawgService.getPlatforms).toHaveBeenCalled();
+        });
+
+        // Fill required fields
+        fireEvent.change(screen.getByLabelText(/Title \*/i), { target: { value: 'Test' } });
+        fireEvent.change(screen.getByLabelText(/Platform \*/i), { target: { value: 'PC' } });
+
+        // Add a genre
+        const genreTrigger = screen.getByText('Select genres…');
+        fireEvent.click(genreTrigger);
+        fireEvent.click(screen.getByRole('option', { name: /Action/i }));
+
+        // Fill other required fields
+        fireEvent.change(screen.getByLabelText(/Selling Price/i), { target: { value: '0' } });
+
+        // Insert invalid negative purchasing price
+        const priceInput = screen.getByLabelText(/Purchasing Price/i);
+        fireEvent.change(priceInput, { target: { value: '-5' } });
+
+        // Submit form
+        fireEvent.submit(screen.getByText('Add Game').closest('form')!);
+
+        await waitFor(() => {
+            expect(screen.getByText('Purchasing price must be greater than or equal to 0')).toBeInTheDocument();
+        });
+
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('shows error if selling price is negative', async () => {
+        const onSubmit = vi.fn();
+        const onCancel = vi.fn();
+
+        (rawgService.getPlatforms as any).mockResolvedValue(['PC']);
+        (rawgService.getGenres as any).mockResolvedValue(['Action']);
+
+        render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
+
+        // Wait for required data
+        await waitFor(() => {
+            expect(rawgService.getPlatforms).toHaveBeenCalled();
+        });
+
+        // Fill required fields
+        fireEvent.change(screen.getByLabelText(/Title \*/i), { target: { value: 'Test' } });
+        fireEvent.change(screen.getByLabelText(/Platform \*/i), { target: { value: 'PC' } });
+
+        // Add a genre
+        const genreTrigger = screen.getByText('Select genres…');
+        fireEvent.click(genreTrigger);
+        fireEvent.click(screen.getByRole('option', { name: /Action/i }));
+
+        // Fill other required fields
+        fireEvent.change(screen.getByLabelText(/Purchasing Price/i), { target: { value: '0' } });
+
+        // Insert invalid negative selling price
+        const priceInput = screen.getByLabelText(/Selling Price/i);
+        fireEvent.change(priceInput, { target: { value: '-10' } });
+
+        // Submit form
+        fireEvent.submit(screen.getByText('Add Game').closest('form')!);
+
+        await waitFor(() => {
+            expect(screen.getByText('Selling price must be greater than or equal to 0')).toBeInTheDocument();
+        });
+
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('shows error if start date is in the future', async () => {
+        const onSubmit = vi.fn();
+        const onCancel = vi.fn();
+
+        (rawgService.getPlatforms as any).mockResolvedValue(['PC']);
+        (rawgService.getGenres as any).mockResolvedValue(['Action']);
+
+        render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
+
+        // Wait for required data
+        await waitFor(() => {
+            expect(rawgService.getPlatforms).toHaveBeenCalled();
+        });
+
+        // Fill required fields
+        fireEvent.change(screen.getByLabelText(/Title \*/i), { target: { value: 'Test' } });
+        fireEvent.change(screen.getByLabelText(/Platform \*/i), { target: { value: 'PC' } });
+
+        // Add a genre
+        const genreTrigger = screen.getByText('Select genres…');
+        fireEvent.click(genreTrigger);
+        fireEvent.click(screen.getByRole('option', { name: /Action/i }));
+
+        // Fill other required fields
+        fireEvent.change(screen.getByLabelText(/Purchasing Price/i), { target: { value: '0' } });
+        fireEvent.change(screen.getByLabelText(/Selling Price/i), { target: { value: '0' } });
+
+        // Insert future start date (tomorrow)
+        const dateInput = screen.getByLabelText(/Start Date/i);
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        fireEvent.change(dateInput, { target: { value: tomorrow.toISOString().split('T')[0] } });
+
+        // Submit form
+        fireEvent.submit(screen.getByText('Add Game').closest('form')!);
+
+        await waitFor(() => {
+            expect(screen.getByText('Start date cannot be in the future')).toBeInTheDocument();
+        });
+
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('shows error if purchasing or selling price is missing', async () => {
+        const onSubmit = vi.fn();
+        const onCancel = vi.fn();
+
+        (rawgService.getPlatforms as any).mockResolvedValue(['PC']);
+        (rawgService.getGenres as any).mockResolvedValue(['Action']);
+
+        render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
+
+        await waitFor(() => {
+            expect(rawgService.getPlatforms).toHaveBeenCalled();
+        });
+
+        fireEvent.change(screen.getByLabelText(/Title \*/i), { target: { value: 'Test' } });
+        fireEvent.change(screen.getByLabelText(/Platform \*/i), { target: { value: 'PC' } });
+
+        fireEvent.click(screen.getByText('Select genres…'));
+        fireEvent.click(screen.getByRole('option', { name: /Action/i }));
+
+        // Leave purchasing/selling prices empty and submit
+        fireEvent.submit(screen.getByText('Add Game').closest('form')!);
+
+        await waitFor(() => {
+            expect(screen.getByText('Purchasing price is required')).toBeInTheDocument();
+        });
+
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+});
