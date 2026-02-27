@@ -1,6 +1,7 @@
 import React from 'react';
-import { Edit2, Trash2, Clock, Calendar, Euro, Tag, Gamepad2, Star } from 'lucide-react';
+import { Edit2, Trash2, Clock, Calendar, Euro, Tag, Star } from 'lucide-react';
 import type { Game } from '../../types/game';
+import { getPlatformConfig } from '../../lib/platforms';
 
 import './GameCard.css';
 
@@ -26,6 +27,12 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
             day: 'numeric'
         });
     };
+
+    const isPlayingOrOnHold = game.status === 'Playing' || game.status === 'On Hold';
+    const isBacklog = game.status === 'Backlog';
+
+    const platformConfig = getPlatformConfig(game.platform);
+    const PlatformIcon = platformConfig.icon;
 
     return (
         <article className="game-card glass-card">
@@ -60,14 +67,24 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
 
                 {/* Line 2: Platform & Genres */}
                 <div className="info-tags">
-                    <span className="info-tag"><Gamepad2 size={14} /> {game.platform}</span>
+                    <span
+                        className="info-tag platform-tag"
+                        style={{
+                            color: platformConfig.color,
+                            borderColor: `${platformConfig.color}40`, // 25% opacity
+                            backgroundColor: `${platformConfig.color}15` // 8% opacity
+                        }}
+                    >
+                        <PlatformIcon size={14} />
+                        {game.platform}
+                    </span>
                     {game.genres?.map(genre => (
                         <span key={genre} className="info-tag"><Tag size={14} /> {genre}</span>
                     ))}
                 </div>
 
                 {/* Line 3: Rating */}
-                {game.rating && (
+                {game.rating && !isPlayingOrOnHold && !isBacklog && (
                     <div className="game-card-rating">
                         <span className="info-tag rating-tag"><Star size={14} fill="currentColor" /> {game.rating}/10</span>
                     </div>
@@ -75,41 +92,57 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
 
                 {/* Darker stats box */}
                 <div className="game-stats-grid">
-                    <div className="stat-item">
-                        <Calendar size={14} className="stat-icon" />
-                        <div className="stat-content">
-                            <span className="stat-label">Started</span>
-                            <span className="stat-value">{formatDate(game.start_date)}</span>
+                    {!isBacklog && (
+                        <div className="stat-item">
+                            <Calendar size={14} className="stat-icon" />
+                            <div className="stat-content">
+                                <span className="stat-label">Started</span>
+                                <span className="stat-value">{formatDate(game.start_date)}</span>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="stat-item">
-                        <Calendar size={14} className="stat-icon" />
-                        <div className="stat-content">
-                            <span className="stat-label">Finished</span>
-                            <span className="stat-value">{formatDate(game.end_date)}</span>
+                    {!isPlayingOrOnHold && !isBacklog && (
+                        <div className="stat-item">
+                            <Calendar size={14} className="stat-icon" />
+                            <div className="stat-content">
+                                <span className="stat-label">Finished</span>
+                                <span className="stat-value">{formatDate(game.end_date)}</span>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="stat-item">
-                        <Clock size={14} className="stat-icon" />
-                        <div className="stat-content">
-                            <span className="stat-label">Playtime</span>
-                            <span className="stat-value">{game.hours_played ? `${game.hours_played}h` : 'N/A'}</span>
+                    {!isPlayingOrOnHold && !isBacklog && (
+                        <div className="stat-item">
+                            <Clock size={14} className="stat-icon" />
+                            <div className="stat-content">
+                                <span className="stat-label">Playtime</span>
+                                <span className="stat-value">{game.hours_played ? `${game.hours_played}h` : 'N/A'}</span>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="stat-item">
                         <Euro size={14} className="stat-icon" />
-                        <div className="stat-content prices">
-                            <span className="price-item buy" title="Purchasing Price">
-                                ↓{game.purchasing_price ?? 'N/A'}
-                            </span>
-                            <span className="price-item sell" title="Selling Price">
-                                ↑{game.selling_price ?? 'N/A'}
+                        <div className="stat-content">
+                            <span className="stat-label">Bought</span>
+                            <span className="stat-value price-item buy">
+                                €{game.purchasing_price ?? 'N/A'}
                             </span>
                         </div>
                     </div>
+
+                    {!isPlayingOrOnHold && !isBacklog && (
+                        <div className="stat-item">
+                            <Euro size={14} className="stat-icon" />
+                            <div className="stat-content">
+                                <span className="stat-label">Sold</span>
+                                <span className="stat-value price-item sell">
+                                    €{game.selling_price ?? 'N/A'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </article>

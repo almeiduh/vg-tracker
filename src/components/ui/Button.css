@@ -35,14 +35,36 @@
 
 /* Variants */
 .btn-primary {
-    background-color: var(--accent-blue);
+    background: linear-gradient(135deg, var(--accent-blue-light), var(--accent-blue));
     color: white;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    border: none;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--accent-blue), #1d4ed8);
+    opacity: 0;
+    z-index: -1;
+    transition: opacity var(--transition-normal);
+}
+
+.btn-primary:hover:not(:disabled)::after {
+    opacity: 1;
 }
 
 .btn-primary:hover:not(:disabled) {
-    background-color: var(--accent-blue-hover);
-    box-shadow: var(--shadow-glow);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+    transform: translateY(-2px);
 }
 
 .btn-secondary {

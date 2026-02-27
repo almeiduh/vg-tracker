@@ -53,8 +53,12 @@ export const Dashboard = () => {
         <div className="dashboard-container" style={{ padding: '0 2rem 2rem', margin: '0 auto', maxWidth: '1440px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 style={{ margin: 0, fontSize: '2rem' }}>Dashboard</h1>
-                <Button onClick={() => handleOpenModal()} variant="primary">
-                    <Plus size={18} />
+                <Button
+                    onClick={() => handleOpenModal()}
+                    variant="primary"
+                    style={{ borderRadius: '9999px', padding: '0.6rem 1.5rem', fontWeight: 600, letterSpacing: '0.5px' }}
+                >
+                    <Plus size={20} strokeWidth={2.5} />
                     Add Game
                 </Button>
             </div>
@@ -67,7 +71,7 @@ export const Dashboard = () => {
 
             <GameSection
                 title="Playing"
-                icon={<PlayCircle size={24} />}
+                icon={<PlayCircle size={26} color="var(--success)" />}
                 games={playingGames}
                 onEdit={handleOpenModal}
                 onDelete={deleteGame}
@@ -75,7 +79,7 @@ export const Dashboard = () => {
 
             <GameSection
                 title="On Hold"
-                icon={<PauseCircle size={24} />}
+                icon={<PauseCircle size={26} color="var(--warning)" />}
                 games={onHoldGames}
                 onEdit={handleOpenModal}
                 onDelete={deleteGame}
@@ -83,7 +87,7 @@ export const Dashboard = () => {
 
             <GameSection
                 title="Backlog"
-                icon={<ListTodo size={24} />}
+                icon={<ListTodo size={26} color="var(--warning-alt)" />}
                 games={backlogGames}
                 onEdit={handleOpenModal}
                 onDelete={deleteGame}

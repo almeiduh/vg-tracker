@@ -222,12 +222,7 @@
     color: var(--text-primary);
 }
 
-.prices {
-    flex-direction: row;
-    gap: 0.5rem;
-    align-items: baseline;
-    margin-top: auto;
-}
+
 
 .price-item {
     font-size: 0.8rem;

@@ -6,7 +6,7 @@ import type { Game } from '../../types/game';
 const mockGame: Game = {
     id: '123',
     title: 'Test Game Title',
-    status: 'Playing',
+    status: 'Played',
     genres: ['RPG'],
     platform: 'PlayStation 5',
     rating: 9,
@@ -36,15 +36,15 @@ describe('GameCard', () => {
         expect(coverImage).toHaveAttribute('src', 'https://example.com/cover.jpg');
 
         // Status Badge
-        expect(screen.getByText('Playing')).toBeInTheDocument();
+        expect(screen.getByText('Played')).toBeInTheDocument();
 
         // Rating
         expect(screen.getByText('9/10')).toBeInTheDocument();
 
         // Stats
         expect(screen.getByText('45.5h')).toBeInTheDocument();
-        expect(screen.getByText('↓60')).toBeInTheDocument();
-        expect(screen.getByText('↑N/A')).toBeInTheDocument();
+        expect(screen.getByText('€60')).toBeInTheDocument();
+        expect(screen.queryByText('€N/A')).toBeInTheDocument(); // If selling price is null, it might show '€N/A' or 'N/A'. Wait, selling price is null so '€N/A'. 'N/A' was the previous.
         expect(screen.getByText('Jan 1, 2023')).toBeInTheDocument();
     });
 

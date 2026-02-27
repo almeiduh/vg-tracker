@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { Gamepad2, CalendarClock } from 'lucide-react';
 import { GameProvider } from './contexts/GameContext';
 import { Dashboard } from './components/Dashboard';
@@ -17,26 +17,27 @@ function App() {
     <GameProvider>
       <BrowserRouter>
         <div className="app-layout">
-          <header className="app-header glass-panel" style={{
-            margin: '1rem',
-            padding: '1rem 2rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div className="logo" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.25rem' }}>
-              <Gamepad2 className="text-accent-blue" color="var(--accent-blue)" />
-              VG Tracker
+          <header className="app-header glass-panel">
+            <div className="logo-container">
+              <img src="/logo.png" alt="VG Tracker Logo" className="app-logo" />
+              <span className="logo-text">VG Tracker</span>
             </div>
-            <nav style={{ display: 'flex', gap: '1.5rem' }}>
-              <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }} className="nav-link">
+            <nav className="nav-tabs">
+              <NavLink
+                to="/"
+                className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}
+                end
+              >
                 <Gamepad2 size={18} />
                 Dashboard
-              </Link>
-              <Link to="/timeline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }} className="nav-link">
+              </NavLink>
+              <NavLink
+                to="/timeline"
+                className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}
+              >
                 <CalendarClock size={18} />
                 Timeline
-              </Link>
+              </NavLink>
             </nav>
           </header>
 
