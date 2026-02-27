@@ -1,0 +1,166 @@
+.genre-multi-select {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.genre-multi-select .input-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Trigger button that looks like an input field */
+.genre-select-trigger {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    width: 100%;
+    min-height: 42px;
+    padding: 0.5rem 2.5rem 0.5rem 0.875rem;
+    font-size: 0.9375rem;
+    font-family: var(--font-family);
+    color: var(--text-primary);
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    outline: none;
+    text-align: left;
+    position: relative;
+
+    /* Chevron arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+}
+
+.genre-select-trigger:focus,
+.genre-select-trigger.open {
+    border-color: var(--accent-blue-light);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.genre-select-placeholder {
+    color: var(--text-muted);
+}
+
+/* Selected genre pills/chips */
+.genre-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--accent-blue-light);
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: var(--radius-full);
+    line-height: 1.4;
+    white-space: nowrap;
+    transition: background var(--transition-fast);
+}
+
+.genre-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: none;
+    background: transparent;
+    color: var(--accent-blue-light);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 50%;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.genre-chip-remove:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+/* Dropdown panel */
+.genre-dropdown-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    margin-top: 0.25rem;
+    max-height: 240px;
+    overflow-y: auto;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    padding: 0.25rem 0;
+}
+
+.genre-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.875rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    transition: background var(--transition-fast);
+    user-select: none;
+}
+
+.genre-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.genre-dropdown-item.selected {
+    color: var(--accent-blue-light);
+}
+
+/* Custom checkbox */
+.genre-checkbox {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1.5px solid var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all var(--transition-fast);
+    background: transparent;
+}
+
+.genre-dropdown-item.selected .genre-checkbox {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.genre-checkbox-check {
+    display: none;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.genre-dropdown-item.selected .genre-checkbox-check {
+    display: block;
+}
+
+.genre-dropdown-empty {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.875rem;
+}

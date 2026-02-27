@@ -6,6 +6,7 @@ export interface RawgGameResult {
     background_image: string | null;
     genres: { id: number; name: string }[];
     platforms: { platform: { name: string } }[];
+    playtime: number;
 }
 
 export interface RawgSearchResponse {
@@ -113,3 +114,58 @@ export async function getPlatforms(): Promise<string[]> {
     }
 }
 
+/**
+ * Fetches the global list of genres from RAWG, using localStorage for a 24-hour cache.
+ * 
+ * @returns Array of genre names
+ */
+export async function getGenres(): Promise<string[]> {
+    const RAWG_API_KEY = import.meta.env.VITE_RAWG_API_KEY;
+    if (!RAWG_API_KEY) return [];
+
+    const CACHE_KEY = 'rawg_genres_cache';
+    const CACHE_DURATION = 1000 * 60 * 60 * 24; // 24 hours
+
+    // 1. Check Cache
+    try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+            const parsed = JSON.parse(cached) as { timestamp: number; data: string[] };
+            if (Date.now() - parsed.timestamp < CACHE_DURATION) {
+                return parsed.data;
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to read RAWG genres cache', e);
+    }
+
+    // 2. Fetch from API if not cached or expired
+    try {
+        const url = new URL(`${RAWG_BASE_URL}/genres`);
+        url.searchParams.append('key', RAWG_API_KEY);
+        url.searchParams.append('page_size', '50');
+
+        const response = await fetch(url.toString());
+        if (!response.ok) {
+            throw new Error(`RAWG API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const genresList = data.results.map((g: any) => g.name);
+
+        // 3. Save to Cache
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+                timestamp: Date.now(),
+                data: genresList
+            }));
+        } catch (e) {
+            console.warn('Failed to write RAWG genres cache', e);
+        }
+
+        return genresList;
+    } catch (error) {
+        console.error('Failed to fetch genres from RAWG API:', error);
+        return [];
+    }
+}

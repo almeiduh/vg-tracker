@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Clock } from 'lucide-react';
 import type { Game, GameStatus } from '../../types/game';
 import { Input, Select } from '../ui/Input';
 import { Button } from '../ui/Button';
-import { searchGames, getPlatforms } from '../../lib/rawg';
+import { searchGames, getPlatforms, getGenres } from '../../lib/rawg';
+import { GenreMultiSelect } from '../ui/GenreMultiSelect';
 import type { RawgGameResult } from '../../lib/rawg';
 import { Search, Loader2 } from 'lucide-react';
 import './GameForm.css';
@@ -46,11 +48,17 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
     const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const searchContainerRef = useRef<HTMLDivElement>(null);
 
+    // Genre options state
+    const [genreOptions, setGenreOptions] = useState<string[]>([]);
+
     // Platform constraint state
     const [platformOptions, setPlatformOptions] = useState<{ value: string, label: string }[]>([]);
     const [restrictedPlatforms, setRestrictedPlatforms] = useState<string[] | null>(null);
 
-    // Fetch global platforms on mount
+    // Transient RAWG average playtime (not persisted)
+    const [averagePlaytime, setAveragePlaytime] = useState<number | null>(null);
+
+    // Fetch global platforms and genres on mount
     useEffect(() => {
         getPlatforms().then(platforms => {
             const options = platforms.map(p => ({ value: p, label: p }));
@@ -64,6 +72,13 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 );
             }
             setPlatformOptions(options);
+        }).catch(console.error);
+
+        getGenres().then(genres => {
+            if (genres.length === 0) {
+                genres = ['Action', 'Adventure', 'RPG', 'Strategy', 'Puzzle', 'Indie', 'Shooter', 'Platformer', 'Racing', 'Sports'];
+            }
+            setGenreOptions(genres);
         }).catch(console.error);
     }, []);
 
@@ -82,6 +97,16 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 hours_played: initialData.hours_played?.toString() ?? '',
                 cover_url: initialData.cover_url ?? null
             });
+
+            // In edit mode, try to fetch the average playtime from RAWG based on the title
+            searchGames(initialData.title, 1)
+                .then(results => {
+                    if (results && results.length > 0) {
+                        const game = results[0];
+                        setAveragePlaytime(game.playtime > 0 ? game.playtime : null);
+                    }
+                })
+                .catch(console.error);
         }
     }, [initialData]);
 
@@ -133,6 +158,9 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
         } else {
             setRestrictedPlatforms(null);
         }
+
+        // Capture average playtime from RAWG (transient, not persisted)
+        setAveragePlaytime(game.playtime > 0 ? game.playtime : null);
 
         setFormData(prev => {
             // Check if current platform is valid in the new restricted list
@@ -256,16 +284,11 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                     className="col-span-full"
                 />
 
-                <Input
-                    label="Genres (comma separated) *"
-                    name="genres"
-                    value={formData.genres.join(', ')}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        const val = e.target.value;
-                        setFormData(prev => ({ ...prev, genres: val.split(',').map(g => g.trim()).filter(Boolean) }));
-                    }}
-                    required
-                    placeholder="e.g. Action RPG, Fantasy"
+                <GenreMultiSelect
+                    label="Genres *"
+                    options={genreOptions}
+                    value={formData.genres}
+                    onChange={(selected) => setFormData(prev => ({ ...prev, genres: selected }))}
                 />
 
                 <Select
@@ -336,15 +359,23 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                     onChange={handleChange}
                 />
 
-                <Input
-                    label="Hours Played"
-                    name="hours_played"
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={formData.hours_played}
-                    onChange={handleChange}
-                />
+                <div className="hours-played-wrapper">
+                    <Input
+                        label="Hours Played"
+                        name="hours_played"
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={formData.hours_played}
+                        onChange={handleChange}
+                    />
+                    {averagePlaytime !== null && (
+                        <span className="avg-playtime-hint">
+                            <Clock size={12} />
+                            Community avg: {averagePlaytime}h
+                        </span>
+                    )}
+                </div>
             </div>
 
             <div className="form-actions">

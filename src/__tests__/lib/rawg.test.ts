@@ -1,9 +1,28 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { searchGames, getPlatforms } from '../../lib/rawg';
+import { searchGames, getPlatforms, getGenres } from '../../lib/rawg';
 
 // Mock the global fetch
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch as any;
+
+// Polyfill localStorage for Node environments
+const localStorageMock = (() => {
+    let store: Record<string, string> = {};
+    return {
+        getItem: (key: string) => store[key] || null,
+        setItem: (key: string, value: string) => {
+            store[key] = value.toString();
+        },
+        clear: () => {
+            store = {};
+        },
+        removeItem: (key: string) => {
+            delete store[key];
+        }
+    };
+})();
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
 
 describe('RAWG Service - searchGames', () => {
     beforeEach(() => {
@@ -28,7 +47,8 @@ describe('RAWG Service - searchGames', () => {
                     id: 123,
                     name: 'The Legend of Zelda',
                     background_image: 'https://example.com/zelda.jpg',
-                    genres: [{ id: 1, name: 'Adventure' }, { id: 2, name: 'Action' }]
+                    genres: [{ id: 1, name: 'Adventure' }, { id: 2, name: 'Action' }],
+                    playtime: 46
                 }
             ]
         };
@@ -147,6 +167,89 @@ describe('RAWG Service - getPlatforms', () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
         const results = await getPlatforms();
+
+        expect(results).toEqual([]);
+        expect(consoleSpy).toHaveBeenCalled();
+        consoleSpy.mockRestore();
+    });
+});
+
+describe('RAWG Service - getGenres', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.stubEnv('VITE_RAWG_API_KEY', 'test_api_key');
+        localStorage.clear();
+    });
+
+    it('fetches genres correctly from API and caches them', async () => {
+        const mockResponse = {
+            results: [
+                { id: 1, name: 'Action' },
+                { id: 2, name: 'RPG' }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => mockResponse,
+        });
+
+        const results = await getGenres();
+
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        const url = new URL(mockFetch.mock.calls[0][0]);
+        expect(url.pathname).toBe('/api/genres');
+        expect(url.searchParams.get('key')).toBe('test_api_key');
+        expect(url.searchParams.get('page_size')).toBe('50');
+
+        expect(results).toHaveLength(2);
+        expect(results).toEqual(['Action', 'RPG']);
+
+        // Verify cache was set
+        const cachedStr = localStorage.getItem('rawg_genres_cache');
+        expect(cachedStr).not.toBeNull();
+        const cached = JSON.parse(cachedStr!);
+        expect(cached.data).toEqual(['Action', 'RPG']);
+    });
+
+    it('returns cached genres if available and not expired', async () => {
+        localStorage.setItem('rawg_genres_cache', JSON.stringify({
+            timestamp: Date.now(),
+            data: ['Adventure', 'Puzzle']
+        }));
+
+        const results = await getGenres();
+
+        expect(mockFetch).not.toHaveBeenCalled();
+        expect(results).toEqual(['Adventure', 'Puzzle']);
+    });
+
+    it('ignores expired cache and fetches from API', async () => {
+        localStorage.setItem('rawg_genres_cache', JSON.stringify({
+            timestamp: Date.now() - (1000 * 60 * 60 * 25),
+            data: ['Old Genre']
+        }));
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ results: [{ name: 'New Genre' }] }),
+        });
+
+        const results = await getGenres();
+
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(results).toEqual(['New Genre']);
+    });
+
+    it('returns empty array if API request fails', async () => {
+        mockFetch.mockResolvedValueOnce({
+            ok: false,
+            status: 500
+        });
+
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+
+        const results = await getGenres();
 
         expect(results).toEqual([]);
         expect(consoleSpy).toHaveBeenCalled();
