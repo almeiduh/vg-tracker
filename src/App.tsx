@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
-import { Gamepad2, CalendarClock } from 'lucide-react';
+import { Gamepad2, CalendarClock, BarChart2 } from 'lucide-react';
 import { GameProvider } from './contexts/GameContext';
 import { Dashboard } from './components/Dashboard';
 import { Timeline } from './components/Timeline';
+import { Statistics } from './components/statistics/Statistics';
 import { getPlatforms } from './lib/rawg';
 import { useEffect } from 'react';
 import './index.css';
@@ -38,6 +39,13 @@ function App() {
                 <CalendarClock size={18} />
                 Timeline
               </NavLink>
+              <NavLink
+                to="/statistics"
+                className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}
+              >
+                <BarChart2 size={18} />
+                Statistics
+              </NavLink>
             </nav>
           </header>
 
@@ -45,7 +53,9 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/timeline" element={<Timeline />} />
+              <Route path="/statistics" element={<Statistics />} />
             </Routes>
+
           </main>
         </div>
       </BrowserRouter>

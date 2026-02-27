@@ -75,8 +75,8 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
                         className="info-tag platform-tag"
                         style={{
                             color: platformConfig.color,
-                            borderColor: `${platformConfig.color}40`, // 25% opacity
-                            backgroundColor: `${platformConfig.color}15` // 8% opacity
+                            borderColor: `${platformConfig.color}80`, // 50% opacity
+                            backgroundColor: `${platformConfig.color}33` // 20% opacity
                         }}
                     >
                         <PlatformIcon size={14} />
