@@ -1,4 +1,4 @@
-import { FaPlaystation, FaXbox, FaWindows, FaLinux, FaApple, FaAndroid, FaSteam } from 'react-icons/fa';
+import { FaPlaystation, FaXbox, FaLinux, FaApple, FaAndroid, FaSteam } from 'react-icons/fa';
 import { SiNintendo, SiNintendoswitch } from 'react-icons/si';
 import { MdGamepad } from 'react-icons/md';
 

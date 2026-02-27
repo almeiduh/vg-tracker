@@ -30,8 +30,8 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
         platform: '',
         rating: '' as string | number,
         status: 'Backlog' as GameStatus,
-        purchasing_price: '',
-        selling_price: '',
+        purchasing_price: '0',
+        selling_price: '0',
         start_date: new Date().toISOString().split('T')[0],
         end_date: '',
         hours_played: '',
@@ -193,8 +193,7 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
             if (!formData.platform.trim()) throw new Error('Platform is required');
 
             if (formData.start_date === '') throw new Error('Start date is required');
-            if (formData.purchasing_price === '') throw new Error('Purchasing price is required');
-            if (formData.selling_price === '') throw new Error('Selling price is required');
+            if (formData.status === 'Played' && formData.end_date === '') throw new Error('End date is required when status is Played');
 
             const parsedRating = formData.rating === '' ? null : Number(formData.rating);
             const parsedPurchasingPrice = Number(formData.purchasing_price);
@@ -218,6 +217,7 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 startIso = startDate.toISOString();
             }
 
+
             await onSubmit({
                 title: formData.title.trim(),
                 genres: formData.genres,
@@ -238,11 +238,9 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
 
     return (
         <form onSubmit={handleSubmit} className="game-form">
-            {error && <div className="form-error glass-panel">{error}</div>}
 
             {/* RAWG Autocomplete Search */}
-            <div className="form-search-section glass-panel" ref={searchContainerRef}>
-                <label className="input-label">Auto-fill from RAWG Database</label>
+            <div className="form-search-section" ref={searchContainerRef}>
                 <div className="search-input-wrapper">
                     <Search className="search-icon" size={18} />
                     <input
@@ -350,23 +348,21 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 />
 
                 <Input
-                    label="Purchasing Price (€) *"
+                    label="Purchasing Price (€)"
                     name="purchasing_price"
                     type="number"
                     step="0.01"
                     min="0"
-                    required
                     value={formData.purchasing_price}
                     onChange={handleChange}
                 />
 
                 <Input
-                    label="Selling Price (€) *"
+                    label="Selling Price (€)"
                     name="selling_price"
                     type="number"
                     step="0.01"
                     min="0"
-                    required
                     value={formData.selling_price}
                     onChange={handleChange}
                 />
@@ -385,6 +381,7 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                     label="End Date (Finished)"
                     name="end_date"
                     type="date"
+                    min={formData.start_date ? (() => { const d = new Date(formData.start_date); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; })() : undefined}
                     value={formData.end_date}
                     onChange={handleChange}
                 />
@@ -407,6 +404,8 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                     )}
                 </div>
             </div>
+
+            {error && <div className="form-error glass-panel">{error}</div>}
 
             <div className="form-actions">
                 <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>

@@ -1,10 +1,49 @@
 import { useState } from 'react';
 import { CalendarClock } from 'lucide-react';
 import { useGames } from '../contexts/GameContext';
-import { GameCard } from './game/GameCard';
+import { TimelineEventCard } from './timeline/TimelineEventCard';
+import type { TimelineEvent } from './timeline/TimelineEventCard';
 import type { Game } from '../types/game';
 import { Modal } from './ui/Modal';
 import { GameForm } from './forms/GameForm';
+
+import './timeline/Timeline.css';
+
+/** Returns 'YYYY-MM' key for grouping events by month. */
+function getMonthYearKey(dateString: string): string {
+    const d = new Date(dateString);
+    return `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
+}
+
+/** Returns a display label like "February 2026". */
+function formatMonthYear(dateString: string): string {
+    return new Date(dateString).toLocaleDateString(undefined, {
+        month: 'long',
+        year: 'numeric'
+    });
+}
+
+/** Build a flat list of timeline events from all non-Backlog games. */
+export function buildTimelineEvents(games: Game[]): TimelineEvent[] {
+    const events: TimelineEvent[] = [];
+
+    for (const game of games) {
+        if (game.status === 'Backlog') continue;
+
+        if (game.start_date) {
+            events.push({ type: 'started', date: game.start_date, game });
+        }
+
+        if (game.end_date && game.status === 'Played') {
+            events.push({ type: 'finished', date: game.end_date, game });
+        }
+    }
+
+    // Sort newest first
+    events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return events;
+}
 
 export const Timeline = () => {
     const { games, isLoading, error, updateGame, deleteGame } = useGames();
@@ -12,14 +51,7 @@ export const Timeline = () => {
     const [editingGame, setEditingGame] = useState<Game | undefined>(undefined);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Filter for Played games and sort by end_date descending (newest finished first)
-    const playedGames = games
-        .filter(g => g.status === 'Played')
-        .sort((a, b) => {
-            const dateA = a.end_date ? new Date(a.end_date).getTime() : 0;
-            const dateB = b.end_date ? new Date(b.end_date).getTime() : 0;
-            return dateB - dateA;
-        });
+    const timelineEvents = buildTimelineEvents(games);
 
     const handleOpenModal = (game: Game) => {
         setEditingGame(game);
@@ -57,7 +89,7 @@ export const Timeline = () => {
                     <CalendarClock className="text-accent-blue" color="var(--accent-blue)" size={32} />
                     Gaming Timeline
                 </h1>
-                <span className="game-section-count">{playedGames.length} Finished</span>
+                <span className="game-section-count">{timelineEvents.length} Events</span>
             </div>
 
             {error ? (
@@ -66,20 +98,34 @@ export const Timeline = () => {
                 </div>
             ) : null}
 
-            {playedGames.length === 0 ? (
+            {timelineEvents.length === 0 ? (
                 <div className="game-section-empty glass-card">
-                    <p>You haven't finished any games yet. Your timeline will appear here.</p>
+                    <p>No timeline events yet. Start or finish a game to see your history here.</p>
                 </div>
             ) : (
-                <div className="game-section-grid">
-                    {playedGames.map(game => (
-                        <GameCard
-                            key={game.id}
-                            game={game}
-                            onEdit={handleOpenModal}
-                            onDelete={deleteGame}
-                        />
-                    ))}
+                <div className="timeline-track">
+                    {timelineEvents.map((event, index) => {
+                        const currentMonth = getMonthYearKey(event.date);
+                        const prevMonth = index > 0 ? getMonthYearKey(timelineEvents[index - 1].date) : null;
+                        const showSeparator = currentMonth !== prevMonth;
+
+                        return (
+                            <div className="timeline-event-group" key={`${event.game.id}-${event.type}-${index}`}>
+                                {showSeparator && (
+                                    <div className="timeline-month-separator">
+                                        <span className="timeline-month-label">{formatMonthYear(event.date)}</span>
+                                    </div>
+                                )}
+                                <div className={`timeline-event timeline-event--${event.type}`}>
+                                    <TimelineEventCard
+                                        event={event}
+                                        onEdit={handleOpenModal}
+                                        onDelete={deleteGame}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 

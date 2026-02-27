@@ -274,4 +274,25 @@ describe('GameForm Validations', () => {
 
         expect(onSubmit).not.toHaveBeenCalled();
     });
+
+    it('restricts end date to be after start date via min attribute', async () => {
+        const onSubmit = vi.fn();
+        const onCancel = vi.fn();
+
+        (rawgService.getPlatforms as any).mockResolvedValue(['PC']);
+        (rawgService.getGenres as any).mockResolvedValue(['Action']);
+
+        render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
+
+        await waitFor(() => {
+            expect(rawgService.getPlatforms).toHaveBeenCalled();
+        });
+
+        // Set start date
+        fireEvent.change(screen.getByLabelText(/Start Date/i), { target: { value: '2026-02-15' } });
+
+        // End date input should have min set to 2026-02-16 (start + 1 day)
+        const endDateInput = screen.getByLabelText(/End Date/i);
+        expect(endDateInput).toHaveAttribute('min', '2026-02-16');
+    });
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Clock, Calendar, Euro, Tag, Star } from 'lucide-react';
+import { Edit2, Trash2, Clock, Calendar, Euro, Tag, Star, Gamepad2 } from 'lucide-react';
 import type { Game } from '../../types/game';
 import { getPlatformConfig } from '../../lib/platforms';
 
@@ -36,11 +36,15 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
 
     return (
         <article className="game-card glass-card">
-            {game.cover_url && (
-                <div className="game-card-cover-wrapper">
+            <div className="game-card-cover-wrapper">
+                {game.cover_url ? (
                     <img src={game.cover_url} alt={game.title} className="game-card-cover" />
-                </div>
-            )}
+                ) : (
+                    <div className="game-card-cover-placeholder">
+                        <Gamepad2 size={40} />
+                    </div>
+                )}
+            </div>
 
             {/* Floating action overlay */}
             <div className="game-card-overlay">

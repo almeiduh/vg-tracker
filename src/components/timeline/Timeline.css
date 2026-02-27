@@ -1,0 +1,292 @@
+/* ===== Timeline Track ===== */
+.timeline-track {
+    position: relative;
+    padding-left: 2.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ===== Timeline Event ===== */
+.timeline-event {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+/* Dot marker — bullseye style, color set by event type */
+.timeline-event::before {
+    content: '';
+    position: absolute;
+    left: -2.175rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    border: 2px solid var(--bg-base);
+    box-shadow: 0 0 0 1.5px var(--accent-blue);
+    z-index: 2;
+    transition: box-shadow var(--transition-normal);
+}
+
+.timeline-event:hover::before {
+    box-shadow: 0 0 0 1.5px var(--accent-blue), 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+/* Green dot for started events */
+.timeline-event--started::before {
+    background: var(--success);
+    box-shadow: 0 0 0 1.5px var(--success);
+}
+
+.timeline-event--started:hover::before {
+    box-shadow: 0 0 0 1.5px var(--success), 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+/* ===== Timeline Event Card ===== */
+.timeline-event-card {
+    display: flex;
+    align-items: stretch;
+    height: 140px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+    position: relative;
+}
+
+.timeline-event-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    border-color: var(--border-focus);
+}
+
+/* Left accent border by event type */
+.timeline-event-card--finished {
+    border-left: 3px solid var(--accent-blue);
+}
+
+.timeline-event-card--started {
+    border-left: 3px solid var(--success);
+}
+
+/* Cover thumbnail */
+.timeline-card-cover {
+    width: 120px;
+    min-height: 100%;
+    flex-shrink: 0;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.timeline-card-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+
+.timeline-card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-normal);
+}
+
+.timeline-event-card:hover .timeline-card-cover img {
+    transform: scale(1.05);
+}
+
+/* Main content area */
+.timeline-card-body {
+    flex: 1;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+/* Top row: event label + badges */
+.timeline-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* Event label (Started/Finished + date) */
+.timeline-event-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.timeline-event-label--started {
+    color: var(--success);
+}
+
+.timeline-event-label--finished {
+    color: var(--accent-blue-light);
+}
+
+.timeline-event-label svg {
+    flex-shrink: 0;
+}
+
+/* Badges row (platform, hours) */
+.timeline-card-badges {
+    display: flex;
+    gap: 0.375rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.timeline-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-light);
+    white-space: nowrap;
+}
+
+/* Title */
+.timeline-card-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Rating bar */
+.timeline-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: auto;
+}
+
+.timeline-rating-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.timeline-rating-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: linear-gradient(to right, var(--accent-blue), var(--accent-blue-light));
+    transition: width 0.6s ease;
+}
+
+.timeline-rating-score {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+/* Floating action overlay — matches GameCard */
+.timeline-card-overlay {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    z-index: 2;
+    opacity: 0;
+    transform: translateX(6px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+}
+
+.timeline-event-card:hover .timeline-card-overlay {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+/* Touch / small screens: always show */
+@media (hover: none),
+(max-width: 640px) {
+    .timeline-card-overlay {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+}
+
+/* ===== Month/Year Separators ===== */
+.timeline-month-separator {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    margin-top: 0.5rem;
+    padding-left: 0.25rem;
+}
+
+/* Horizontal rule after the label */
+.timeline-month-separator::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, rgba(59, 130, 246, 0.3), transparent);
+}
+
+/* No diamond marker */
+
+.timeline-month-label {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+    .timeline-track {
+        padding-left: 0;
+    }
+
+    .timeline-event::before {
+        display: none;
+    }
+
+    .timeline-card-cover {
+        width: 80px;
+    }
+
+    .timeline-card-body {
+        padding: 0.75rem;
+    }
+
+    .timeline-card-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

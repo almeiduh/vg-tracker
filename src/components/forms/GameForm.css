@@ -43,17 +43,12 @@
 .form-search-section {
     position: relative;
     z-index: 10;
-    padding: var(--spacing-lg, 1.5rem);
-    margin-bottom: var(--spacing-lg, 1.5rem);
-    border-radius: var(--radius-lg, 1rem);
-    background: rgba(var(--primary-color-rgb, 99, 102, 241), 0.05);
 }
 
 .search-input-wrapper {
     position: relative;
     display: flex;
     align-items: center;
-    margin-top: var(--spacing-xs, 0.5rem);
 }
 
 .search-icon {
