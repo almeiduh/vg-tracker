@@ -174,9 +174,10 @@
 }
 
 .form-cover-preview {
-    max-height: 200px;
-    max-width: 100%;
-    object-fit: contain;
+    width: 180px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    object-position: center;
     border-radius: var(--radius-md, 0.5rem);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
