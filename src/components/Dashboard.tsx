@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PlayCircle, PauseCircle, ListTodo, Plus } from 'lucide-react';
+import { PlayCircle, PauseCircle, ListTodo, Plus, CheckCircle } from 'lucide-react';
 import { useGames } from '../contexts/GameContext';
 import { GameSection } from './game/GameSection';
 import type { Game } from '../types/game';
@@ -16,6 +16,14 @@ export const Dashboard = () => {
     const playingGames = games.filter(g => g.status === 'Playing');
     const onHoldGames = games.filter(g => g.status === 'On Hold');
     const backlogGames = games.filter(g => g.status === 'Backlog');
+    const playedGames = games
+        .filter(g => g.status === 'Played')
+        .sort((a, b) => {
+            if (!a.end_date && !b.end_date) return 0;
+            if (!a.end_date) return 1;
+            if (!b.end_date) return -1;
+            return new Date(b.end_date).getTime() - new Date(a.end_date).getTime();
+        });
 
     const handleOpenModal = (game?: Game) => {
         setEditingGame(game);
@@ -89,6 +97,14 @@ export const Dashboard = () => {
                 title="Backlog"
                 icon={<ListTodo size={26} color="var(--warning-alt)" />}
                 games={backlogGames}
+                onEdit={handleOpenModal}
+                onDelete={deleteGame}
+            />
+
+            <GameSection
+                title="Played"
+                icon={<CheckCircle size={26} color="var(--success)" />}
+                games={playedGames}
                 onEdit={handleOpenModal}
                 onDelete={deleteGame}
             />
