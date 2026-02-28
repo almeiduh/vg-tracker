@@ -1,18 +1,36 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
-import { Gamepad2, CalendarClock, BarChart2 } from 'lucide-react';
+import { Gamepad2, CalendarClock, BarChart2, LogOut } from 'lucide-react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GameProvider } from './contexts/GameContext';
 import { Dashboard } from './components/Dashboard';
 import { Timeline } from './components/Timeline';
 import { Statistics } from './components/statistics/Statistics';
+import { LoginPage } from './components/LoginPage';
 import { getPlatforms } from './lib/rawg';
 import { useEffect } from 'react';
 import './index.css';
 
-function App() {
+function AppContent() {
+  const { session, isLoading, signOut, user } = useAuth();
+
   useEffect(() => {
-    // Warm up the platforms cache on initial application load
-    getPlatforms().catch(console.error);
-  }, []);
+    if (session) {
+      // Warm up the platforms cache on initial application load
+      getPlatforms().catch(console.error);
+    }
+  }, [session]);
+
+  if (isLoading) {
+    return (
+      <div className="app-loading">
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginPage />;
+  }
 
   return (
     <GameProvider>
@@ -47,6 +65,17 @@ function App() {
                 Statistics
               </NavLink>
             </nav>
+            <div className="header-actions">
+              <span className="user-email">{user?.email}</span>
+              <button
+                className="logout-button"
+                id="logout-button"
+                onClick={signOut}
+                title="Sign out"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
           </header>
 
           <main className="app-main">
@@ -60,6 +89,14 @@ function App() {
         </div>
       </BrowserRouter>
     </GameProvider>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

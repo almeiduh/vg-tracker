@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 import type { Game } from '../types/game';
 
 interface GameContextType {
@@ -15,6 +16,7 @@ interface GameContextType {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
+    const { user } = useAuth();
     const [games, setGames] = useState<Game[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const addGame = async (gameData: Omit<Game, 'id' | 'created_at' | 'updated_at'>) => {
         try {
             setError(null);
-            const { error } = await supabase.from('games').insert([gameData]);
+            const payload = { ...gameData, user_id: user?.id };
+            const { error } = await supabase.from('games').insert([payload]);
             if (error) throw error;
             // Real-time subscription will trigger fetchGames
         } catch (err: any) {

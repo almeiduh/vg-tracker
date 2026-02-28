@@ -123,28 +123,25 @@ export function Statistics() {
                     </div>
                 </div>
 
-                {/* Genre Distribution Doughnut */}
+                {/* Genre Distribution Bar Chart */}
                 <div className="chart-card glass-panel row-span-2">
                     <h3>Genre Distribution</h3>
                     <div className="chart-wrapper chart-tall">
                         <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={stats.genreDistribution}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
+                            <BarChart data={stats.genreDistribution} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
+                                <XAxis type="number" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} allowDecimals={false} />
+                                <YAxis dataKey="name" type="category" stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                                <Tooltip
+                                    cursor={{ fill: '#374151', opacity: 0.4 }}
+                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
+                                />
+                                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                                     {stats.genreDistribution.map((_, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
-                                </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
-                                <Legend wrapperStyle={{ fontSize: '11px' }} />
-                            </PieChart>
+                                </Bar>
+                            </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>

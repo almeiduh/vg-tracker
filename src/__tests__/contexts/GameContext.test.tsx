@@ -15,9 +15,21 @@ vi.mock('../../lib/supabase', () => ({
     }
 }));
 
+// Mock AuthContext to provide a fake user
+vi.mock('../../contexts/AuthContext', () => ({
+    useAuth: () => ({
+        user: { id: 'test-user-id', email: 'test@example.com' },
+        session: { user: { id: 'test-user-id' } },
+        isLoading: false,
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+    }),
+    AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 const mockGames = [
-    { id: '1', title: 'Game 1', status: 'Playing', genres: ['RPG'], platform: 'PC' },
-    { id: '2', title: 'Game 2', status: 'Backlog', genres: ['Action'], platform: 'PlayStation 5' }
+    { id: '1', title: 'Game 1', status: 'Playing', genres: ['RPG'], platform: 'PC', user_id: 'test-user-id' },
+    { id: '2', title: 'Game 2', status: 'Backlog', genres: ['Action'], platform: 'PlayStation 5', user_id: 'test-user-id' }
 ];
 
 describe('GameContext', () => {
@@ -78,6 +90,37 @@ describe('GameContext', () => {
         });
 
         expect(supabase.from).toHaveBeenCalledWith('games');
+    });
+
+    it('includes user_id when adding a game', async () => {
+        const mockInsert = vi.fn().mockResolvedValue({ error: null });
+        (supabase.from as any).mockReturnValue({
+            select: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({ data: mockGames, error: null })
+            }),
+            insert: mockInsert,
+        });
+
+        const { result } = renderHook(() => useGames(), { wrapper });
+
+        await act(async () => {
+            await result.current.addGame({
+                title: 'New Game',
+                status: 'Playing',
+                genres: ['FPS'],
+                platform: 'Xbox',
+                rating: null,
+                purchasing_price: null,
+                selling_price: null,
+                start_date: null,
+                end_date: null,
+                hours_played: null
+            });
+        });
+
+        expect(mockInsert).toHaveBeenCalledWith([
+            expect.objectContaining({ user_id: 'test-user-id' })
+        ]);
     });
 
     it('updates a game successfully', async () => {

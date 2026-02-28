@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Ensure you replace these with your actual Supabase project URL and anon key
-// Note: We are ignoring RLS for this single-user project. Use environment variables defined in `.env.local`.
+// Supabase project URL and anon key from environment variables defined in `.env.local`.
+// RLS is enabled — the user must be authenticated for data access.
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
