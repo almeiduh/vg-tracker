@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
-import { Gamepad2, CalendarClock, BarChart2, LogOut } from 'lucide-react';
+import { Gamepad2, CalendarClock, BarChart2, LogOut, User } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GameProvider } from './contexts/GameContext';
 import { Dashboard } from './components/Dashboard';
 import { Timeline } from './components/Timeline';
 import { Statistics } from './components/statistics/Statistics';
 import { LoginPage } from './components/LoginPage';
+import { ProfilePage } from './components/profile/ProfilePage';
 import { getPlatforms } from './lib/rawg';
 import { useEffect } from 'react';
 import './index.css';
@@ -66,7 +67,14 @@ function AppContent() {
               </NavLink>
             </nav>
             <div className="header-actions">
-              <span className="user-email">{user?.email}</span>
+              <NavLink
+                to="/profile"
+                className={({ isActive }) => `user-profile-link ${isActive ? 'active' : ''}`}
+                title="Account Settings"
+              >
+                <User size={18} />
+                <span className="user-email" title={user?.email}>{user?.user_metadata?.full_name || user?.email}</span>
+              </NavLink>
               <button
                 className="logout-button"
                 id="logout-button"
@@ -83,6 +91,7 @@ function AppContent() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/timeline" element={<Timeline />} />
               <Route path="/statistics" element={<Statistics />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Routes>
 
           </main>

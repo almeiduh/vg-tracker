@@ -5,16 +5,20 @@ import { AuthProvider, useAuth } from '../../contexts/AuthContext';
 // Mock Supabase client
 const mockGetSession = vi.fn();
 const mockSignInWithPassword = vi.fn();
+const mockSignUp = vi.fn();
 const mockSignOut = vi.fn();
 const mockOnAuthStateChange = vi.fn();
+const mockUpdateUser = vi.fn();
 
 vi.mock('../../lib/supabase', () => ({
     supabase: {
         auth: {
             getSession: (...args: any[]) => mockGetSession(...args),
             signInWithPassword: (...args: any[]) => mockSignInWithPassword(...args),
+            signUp: (...args: any[]) => mockSignUp(...args),
             signOut: (...args: any[]) => mockSignOut(...args),
             onAuthStateChange: (...args: any[]) => mockOnAuthStateChange(...args),
+            updateUser: (...args: any[]) => mockUpdateUser(...args),
         }
     }
 }));
@@ -163,5 +167,165 @@ describe('AuthContext', () => {
         expect(() => {
             renderHook(() => useAuth());
         }).toThrow('useAuth must be used within an AuthProvider');
+    });
+
+    it('signs up with email, password, and name', async () => {
+        mockSignUp.mockResolvedValue({ error: null });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        let signUpResult: { error: string | null } = { error: 'not called' };
+        await act(async () => {
+            signUpResult = await result.current.signUp('new@example.com', 'password123', 'New User');
+        });
+
+        expect(signUpResult.error).toBeNull();
+        expect(mockSignUp).toHaveBeenCalledWith({
+            email: 'new@example.com',
+            password: 'password123',
+            options: {
+                data: {
+                    full_name: 'New User',
+                },
+            },
+        });
+    });
+
+    it('returns error message on failed sign up', async () => {
+        mockSignUp.mockResolvedValue({
+            error: { message: 'Email already registered' }
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        let signUpResult: { error: string | null } = { error: null };
+        await act(async () => {
+            signUpResult = await result.current.signUp('existing@example.com', 'badpassword', 'Existing User');
+        });
+
+        expect(signUpResult.error).toBe('Email already registered');
+    });
+
+    it('rejects sign in and signs out if account is disabled', async () => {
+        const mockDisabledSession = {
+            user: { id: 'user-disabled', user_metadata: { disabled: true } },
+            access_token: 'token-disabled'
+        };
+
+        mockSignInWithPassword.mockResolvedValue({
+            data: mockDisabledSession,
+            error: null
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        let signInResult: { error: string | null } = { error: null };
+        await act(async () => {
+            signInResult = await result.current.signIn('disabled@example.com', 'password123');
+        });
+
+        expect(signInResult.error).toBe('Your account is disabled. In order to be re-enabled, please contact support.');
+        expect(mockSignOut).toHaveBeenCalled();
+    });
+
+    it('signs out automatically on initial load if account is disabled', async () => {
+        const mockDisabledSession = {
+            user: { id: 'user-disabled', user_metadata: { disabled: true } },
+            access_token: 'token-disabled'
+        };
+
+        mockGetSession.mockResolvedValue({
+            data: { session: mockDisabledSession }
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        expect(mockSignOut).toHaveBeenCalled();
+        expect(result.current.user).toBeNull();
+    });
+
+    it('updates email successfully', async () => {
+        mockUpdateUser.mockResolvedValue({ error: null });
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        let updateResult: { error: string | null } | undefined;
+        await act(async () => {
+            updateResult = await result.current.updateEmail('newemail@example.com');
+        });
+
+        expect(updateResult?.error).toBeNull();
+        expect(mockUpdateUser).toHaveBeenCalledWith({ email: 'newemail@example.com' });
+    });
+
+    it('updates name successfully', async () => {
+        mockUpdateUser.mockResolvedValue({ error: null });
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        let updateResult: { error: string | null } | undefined;
+        await act(async () => {
+            updateResult = await result.current.updateName('New Name');
+        });
+
+        expect(updateResult?.error).toBeNull();
+        expect(mockUpdateUser).toHaveBeenCalledWith({ data: { full_name: 'New Name' } });
+    });
+
+    it('updates password successfully', async () => {
+        mockUpdateUser.mockResolvedValue({ error: null });
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        let updateResult: { error: string | null } | undefined;
+        await act(async () => {
+            updateResult = await result.current.updatePassword('newpassword123');
+        });
+
+        expect(updateResult?.error).toBeNull();
+        expect(mockUpdateUser).toHaveBeenCalledWith({ password: 'newpassword123' });
+    });
+
+    it('disables account successfully and signs out', async () => {
+        mockUpdateUser.mockResolvedValue({ error: null });
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        let disableResult: { error: string | null } | undefined;
+        await act(async () => {
+            disableResult = await result.current.disableAccount();
+        });
+
+        expect(disableResult?.error).toBeNull();
+        expect(mockUpdateUser).toHaveBeenCalledWith({ data: { disabled: true } });
+        expect(mockSignOut).toHaveBeenCalled();
     });
 });

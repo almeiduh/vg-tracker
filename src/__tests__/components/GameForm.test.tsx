@@ -246,7 +246,7 @@ describe('GameForm Validations', () => {
         expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    it('shows error if purchasing or selling price is missing', async () => {
+    it('defaults purchasing or selling price to 0 if missing', async () => {
         const onSubmit = vi.fn();
         const onCancel = vi.fn();
 
@@ -265,14 +265,21 @@ describe('GameForm Validations', () => {
         fireEvent.click(screen.getByText('Select genres…'));
         fireEvent.click(screen.getByRole('option', { name: /Action/i }));
 
-        // Leave purchasing/selling prices empty and submit
+        // Clear the form value since there are defaults
+        const purchasingInput = screen.getByLabelText(/Purchasing Price/i);
+        const sellingInput = screen.getByLabelText(/Selling Price/i);
+        fireEvent.change(purchasingInput, { target: { value: '' } });
+        fireEvent.change(sellingInput, { target: { value: '' } });
+
+        // Submit form
         fireEvent.submit(screen.getByText('Add Game').closest('form')!);
 
         await waitFor(() => {
-            expect(screen.getByText('Purchasing price is required')).toBeInTheDocument();
+            expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+                purchasing_price: 0,
+                selling_price: 0
+            }));
         });
-
-        expect(onSubmit).not.toHaveBeenCalled();
     });
 
     it('restricts end date to be after start date via min attribute', async () => {

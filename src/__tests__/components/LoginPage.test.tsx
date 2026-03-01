@@ -4,10 +4,12 @@ import { LoginPage } from '../../components/LoginPage';
 
 // Mock the AuthContext
 const mockSignIn = vi.fn();
+const mockSignUp = vi.fn();
 
 vi.mock('../../contexts/AuthContext', () => ({
     useAuth: () => ({
         signIn: mockSignIn,
+        signUp: mockSignUp,
         user: null,
         session: null,
         isLoading: false,
@@ -113,5 +115,63 @@ describe('LoginPage', () => {
         expect(document.getElementById('login-email')).toBeInTheDocument();
         expect(document.getElementById('login-password')).toBeInTheDocument();
         expect(document.getElementById('login-submit')).toBeInTheDocument();
+    });
+
+    it('toggles to register mode and submits correctly', async () => {
+        mockSignUp.mockResolvedValue({ error: null });
+
+        render(<LoginPage />);
+
+        // Toggle to register mode by clicking "Don't have an account? Register"
+        fireEvent.click(screen.getByRole('button', { name: "Don't have an account? Register" }));
+
+        expect(screen.getByText('Create an account to start tracking')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: "Already have an account? Sign In" })).toBeInTheDocument();
+
+        // Fill form
+        fireEvent.change(screen.getByLabelText('Name'), {
+            target: { value: 'Test User' }
+        });
+        fireEvent.change(screen.getByLabelText('Email'), {
+            target: { value: 'new@example.com' }
+        });
+        fireEvent.change(screen.getByLabelText('Password'), {
+            target: { value: 'password123' }
+        });
+
+        // Submit form
+        fireEvent.click(screen.getByRole('button', { name: 'Register' }));
+
+        await waitFor(() => {
+            expect(mockSignUp).toHaveBeenCalledWith('new@example.com', 'password123', 'Test User');
+            // After successful registration, it should show success message and revert back to login mode.
+            expect(screen.getByText('Registration successful! Please check your email to verify your account.')).toBeInTheDocument();
+        });
+    });
+
+    it('displays error message on failed registration', async () => {
+        mockSignUp.mockResolvedValue({ error: 'User already registered' });
+
+        render(<LoginPage />);
+
+        // Toggle to register mode
+        fireEvent.click(screen.getByRole('button', { name: "Don't have an account? Register" }));
+
+        // Fill form
+        fireEvent.change(screen.getByLabelText('Name'), {
+            target: { value: 'Test User' }
+        });
+        fireEvent.change(screen.getByLabelText('Email'), {
+            target: { value: 'existing@example.com' }
+        });
+        fireEvent.change(screen.getByLabelText('Password'), {
+            target: { value: 'password123' }
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Register' }));
+
+        await waitFor(() => {
+            expect(screen.getByText('User already registered')).toBeInTheDocument();
+        });
     });
 });
