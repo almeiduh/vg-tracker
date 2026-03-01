@@ -251,6 +251,18 @@ p {
   .timeline-container {
     padding: 0 1rem 1rem !important;
   }
+
+  .nav-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
 }
 
 /* Header Actions */
