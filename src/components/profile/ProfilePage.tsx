@@ -86,6 +86,7 @@ export function ProfilePage() {
                         id="name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        maxLength={50}
                         required
                     />
                     <Button type="submit" isLoading={loading} variant="primary">
