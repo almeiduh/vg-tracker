@@ -267,6 +267,32 @@ export function Statistics() {
                     </div>
                 </div>
 
+                {/* Format Distribution */}
+                <div className="chart-card glass-panel">
+                    <h3>Format Distribution</h3>
+                    <div className="chart-wrapper chart-tall">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={stats.formatDistribution}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={50}
+                                    outerRadius={70}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {stats.formatDistribution?.map((_, index) => (
+                                        <Cell key={`format-${index}`} fill={COLORS[(index + 3) % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
+                                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
                 {/* Average Playtime by Genre */}
                 <div className="chart-card glass-panel">
                     <h3>Avg Playtime by Genre (Hours)</h3>

@@ -142,6 +142,17 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
             .map(([name, value]) => ({ name, value }))
             .sort((a, b) => b.value - a.value);
 
+        // 9.5 Format Distribution
+        const formatCountMap = new Map<string, number>();
+        filteredGames.forEach(game => {
+            if (game.format) {
+                formatCountMap.set(game.format, (formatCountMap.get(game.format) || 0) + 1);
+            }
+        });
+        const formatDistribution = Array.from(formatCountMap.entries())
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value);
+
         // 10. Cost per Hour of Entertainment
         const totalHoursPlayed = filteredGames.reduce((acc, game) => acc + (game.hours_played || 0), 0);
         const costPerHour = totalHoursPlayed > 0 ? liquidSpent / totalHoursPlayed : 0;
@@ -218,6 +229,7 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
             ratingDistribution,
             daysPlayedDistribution,
             statusDistribution,
+            formatDistribution,
             costPerHour,
             avgPlaytimeByGenre,
             topGamesByPlaytime,

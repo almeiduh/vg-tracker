@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Clock, Calendar, Euro, Tag, Star, Gamepad2, Disc } from 'lucide-react';
+import { Edit2, Trash2, Clock, Calendar, Euro, Tag, Star, Gamepad2, Disc, Cloud, HardDrive } from 'lucide-react';
 import type { Game } from '../../types/game';
 import { getPlatformConfig } from '../../lib/platforms';
 
@@ -93,7 +93,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
                         {game.platform}
                     </span>
                     <span className="info-tag format-tag">
-                        <Disc size={14} />
+                        {game.format === 'Cloud' && <Cloud size={14} />}
+                        {game.format === 'Physical' && <Disc size={14} />}
+                        {game.format === 'Digital' && <HardDrive size={14} />}
                         {game.format}
                     </span>
                     {game.genres?.map(genre => (
