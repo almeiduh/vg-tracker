@@ -9,6 +9,7 @@ const makeGame = (overrides: Partial<Game>): Game => ({
     platform: 'PC',
     rating: null,
     status: 'Playing',
+    format: 'Digital',
     purchasing_price: 0,
     selling_price: null,
     start_date: null,
