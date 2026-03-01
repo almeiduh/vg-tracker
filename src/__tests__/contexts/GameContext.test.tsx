@@ -28,8 +28,8 @@ vi.mock('../../contexts/AuthContext', () => ({
 }));
 
 const mockGames = [
-    { id: '1', title: 'Game 1', status: 'Playing', genres: ['RPG'], platform: 'PC', user_id: 'test-user-id' },
-    { id: '2', title: 'Game 2', status: 'Backlog', genres: ['Action'], platform: 'PlayStation 5', user_id: 'test-user-id' }
+    { id: '1', title: 'Game 1', status: 'Playing', format: 'Digital', genres: ['RPG'], platform: 'PC', user_id: 'test-user-id' },
+    { id: '2', title: 'Game 2', status: 'Backlog', format: 'Physical', genres: ['Action'], platform: 'PlayStation 5', user_id: 'test-user-id' }
 ];
 
 describe('GameContext', () => {
@@ -85,7 +85,8 @@ describe('GameContext', () => {
                 selling_price: null,
                 start_date: null,
                 end_date: null,
-                hours_played: null
+                hours_played: null,
+                format: 'Digital'
             });
         });
 
@@ -114,7 +115,8 @@ describe('GameContext', () => {
                 selling_price: null,
                 start_date: null,
                 end_date: null,
-                hours_played: null
+                hours_played: null,
+                format: 'Digital'
             });
         });
 

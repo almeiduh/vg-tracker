@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Clock } from 'lucide-react';
-import type { Game, GameStatus } from '../../types/game';
+import type { Game, GameStatus, GameFormat } from '../../types/game';
 import { Input, Select } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { searchGames, getPlatforms, getGenres } from '../../lib/rawg';
@@ -23,6 +23,12 @@ const STATUS_OPTIONS = [
     { value: 'Played', label: 'Played' },
 ];
 
+const FORMAT_OPTIONS = [
+    { value: 'Digital', label: 'Digital' },
+    { value: 'Physical', label: 'Physical' },
+    { value: 'Cloud', label: 'Cloud' },
+];
+
 export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCancel, isLoading }) => {
     const [formData, setFormData] = useState({
         title: '',
@@ -35,7 +41,8 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
         start_date: new Date().toISOString().split('T')[0],
         end_date: '',
         hours_played: '',
-        cover_url: '' as string | null
+        cover_url: '' as string | null,
+        format: 'Digital' as GameFormat
     });
 
     const [error, setError] = useState<string | null>(null);
@@ -95,7 +102,8 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 start_date: initialData.start_date ? initialData.start_date.split('T')[0] : '',
                 end_date: initialData.end_date ? initialData.end_date.split('T')[0] : '',
                 hours_played: initialData.hours_played?.toString() ?? '',
-                cover_url: initialData.cover_url ?? null
+                cover_url: initialData.cover_url ?? null,
+                format: initialData.format ?? 'Digital'
             });
 
             // In edit mode, try to fetch the average playtime from RAWG based on the title
@@ -229,7 +237,8 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 start_date: startIso,
                 end_date: formData.end_date === '' ? null : new Date(formData.end_date).toISOString(),
                 hours_played: formData.hours_played === '' ? null : Number(formData.hours_played),
-                cover_url: formData.cover_url
+                cover_url: formData.cover_url,
+                format: formData.format
             });
         } catch (err: any) {
             setError(err.message || 'Failed to submit form');
@@ -335,6 +344,15 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                     value={formData.status}
                     onChange={handleChange}
                     options={STATUS_OPTIONS}
+                />
+
+                <Select
+                    label="Format *"
+                    name="format"
+                    value={formData.format}
+                    onChange={handleChange}
+                    required
+                    options={FORMAT_OPTIONS}
                 />
 
                 <Input

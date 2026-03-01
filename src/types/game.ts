@@ -1,4 +1,5 @@
 export type GameStatus = "Playing" | "On Hold" | "Backlog" | "Played";
+export type GameFormat = "Digital" | "Physical" | "Cloud";
 
 export interface Game {
     id: string; // UUID from Supabase
@@ -7,6 +8,7 @@ export interface Game {
     platform: string;
     rating: number | null; // 1-10 rating, null if unrated
     status: GameStatus;
+    format: GameFormat;
     purchasing_price: number | null; // In Euros
     selling_price: number | null; // In Euros
     start_date: string | null; // ISO Date String

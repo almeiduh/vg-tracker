@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Clock, Calendar, Euro, Tag, Star, Gamepad2 } from 'lucide-react';
+import { Edit2, Trash2, Clock, Calendar, Euro, Tag, Star, Gamepad2, Disc } from 'lucide-react';
 import type { Game } from '../../types/game';
 import { getPlatformConfig } from '../../lib/platforms';
 
@@ -91,6 +91,10 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
                     >
                         <PlatformIcon size={14} />
                         {game.platform}
+                    </span>
+                    <span className="info-tag format-tag">
+                        <Disc size={14} />
+                        {game.format}
                     </span>
                     {game.genres?.map(genre => (
                         <span key={genre} className="info-tag"><Tag size={14} /> {genre}</span>

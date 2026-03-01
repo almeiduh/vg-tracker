@@ -7,6 +7,7 @@ const mockGame: Game = {
     id: '123',
     title: 'Test Game Title',
     status: 'Played',
+    format: 'Physical',
     genres: ['RPG'],
     platform: 'PlayStation 5',
     rating: 9,
@@ -29,6 +30,7 @@ describe('GameCard', () => {
         expect(screen.getByText('Test Game Title')).toBeInTheDocument();
         expect(screen.getByText('RPG')).toBeInTheDocument();
         expect(screen.getByText('PlayStation 5')).toBeInTheDocument();
+        expect(screen.getByText('Physical')).toBeInTheDocument();
 
         // Cover Image
         const coverImage = screen.getByAltText('Test Game Title');

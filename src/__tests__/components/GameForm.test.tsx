@@ -277,7 +277,8 @@ describe('GameForm Validations', () => {
         await waitFor(() => {
             expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
                 purchasing_price: 0,
-                selling_price: 0
+                selling_price: 0,
+                format: 'Digital'
             }));
         });
     });
