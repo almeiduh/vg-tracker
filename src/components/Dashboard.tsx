@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { PlayCircle, PauseCircle, ListTodo, Plus, CheckCircle } from 'lucide-react';
+import { PlayCircle, PauseCircle, ListTodo, Plus, CheckCircle, FileSpreadsheet } from 'lucide-react';
+import { exportGamesToExcel } from '../lib/exportToExcel';
 import { useGames } from '../contexts/GameContext';
 import { GameSection } from './game/GameSection';
 import type { Game } from '../types/game';
@@ -61,14 +62,26 @@ export const Dashboard = () => {
         <div className="dashboard-container" style={{ padding: '0 2rem 2rem', margin: '0 auto', maxWidth: '1440px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 style={{ margin: 0, fontSize: '2rem' }}>Dashboard</h1>
-                <Button
-                    onClick={() => handleOpenModal()}
-                    variant="primary"
-                    style={{ borderRadius: '9999px', padding: '0.6rem 1.5rem', fontWeight: 600, letterSpacing: '0.5px' }}
-                >
-                    <Plus size={20} strokeWidth={2.5} />
-                    Add Game
-                </Button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <Button
+                        onClick={() => exportGamesToExcel(games)}
+                        variant="secondary"
+                        disabled={games.length === 0}
+                        title={games.length === 0 ? 'No games to export' : 'Export all games to Excel'}
+                        style={{ borderRadius: '9999px', padding: '0.6rem 1.5rem', fontWeight: 600, letterSpacing: '0.5px' }}
+                    >
+                        <FileSpreadsheet size={20} strokeWidth={2} />
+                        Export
+                    </Button>
+                    <Button
+                        onClick={() => handleOpenModal()}
+                        variant="primary"
+                        style={{ borderRadius: '9999px', padding: '0.6rem 1.5rem', fontWeight: 600, letterSpacing: '0.5px' }}
+                    >
+                        <Plus size={20} strokeWidth={2.5} />
+                        Add Game
+                    </Button>
+                </div>
             </div>
 
             {error ? (
