@@ -1,0 +1,12 @@
+{
+  "summary": "Vitest + React Testing Library patterns used in VG Tracker: how to mock the Supabase client (auth and database methods), how to mock the RAWG fetch API and localStorage cache, how to mock AuthContext when testing GameContext or components, the renderHook + act + timer flush pattern for async hooks, and how to use vi.stubEnv for Vite env vars in tests.",
+  "created": "2026-06-17",
+  "project": "vg-tracker",
+  "references": [
+    "src/__tests__/contexts/AuthContext.test.tsx",
+    "src/__tests__/contexts/GameContext.test.tsx",
+    "src/__tests__/lib/rawg.test.ts",
+    "src/__tests__/components/LoginPage.test.tsx",
+    "src/__tests__/components/GameForm.test.tsx"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "summary": "Recharts usage patterns in VG Tracker's Statistics view: chart types in use (AreaChart, BarChart, PieChart), how ResponsiveContainer wraps all charts, the Tooltip dark-mode style convention, Cell-per-entry coloring pattern, platform color integration via getPlatformConfig(), the COLORS and RATING_COLORS palettes, and the useGameStats hook that feeds all chart data.",
+  "created": "2026-06-17",
+  "project": "vg-tracker",
+  "references": [
+    "src/components/statistics/Statistics.tsx",
+    "src/hooks/useGameStats.ts",
+    "src/lib/platforms.ts"
+  ]
+}

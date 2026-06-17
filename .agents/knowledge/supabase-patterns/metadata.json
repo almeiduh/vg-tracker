@@ -1,0 +1,10 @@
+{
+  "summary": "Supabase auth and realtime patterns used in VG Tracker: how AuthContext and GameContext integrate with Supabase, subscription lifecycle and cleanup, auth state management including the disabled-user guard, and RLS-aware data access via user_id scoping.",
+  "created": "2026-06-17",
+  "project": "vg-tracker",
+  "references": [
+    "src/contexts/AuthContext.tsx",
+    "src/contexts/GameContext.tsx",
+    "src/lib/supabase.ts"
+  ]
+}
