@@ -116,7 +116,7 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
             '6m+': 0
         };
         filteredGames.forEach(game => {
-            if (game.status === 'Backlog' || !game.start_date) return;
+            if (game.status === 'Backlog' || game.status === 'Wishlist' || !game.start_date) return;
             const start = new Date(game.start_date);
             start.setHours(0, 0, 0, 0);
             const end = game.end_date ? new Date(game.end_date) : now; // now is defined at the top

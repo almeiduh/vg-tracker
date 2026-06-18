@@ -23,12 +23,12 @@ function formatMonthYear(dateString: string): string {
     });
 }
 
-/** Build a flat list of timeline events from all non-Backlog games. */
+/** Build a flat list of timeline events from all non-Backlog/Wishlist games. */
 export function buildTimelineEvents(games: Game[]): TimelineEvent[] {
     const events: TimelineEvent[] = [];
 
     for (const game of games) {
-        if (game.status === 'Backlog') continue;
+        if (game.status === 'Backlog' || game.status === 'Wishlist') continue;
 
         if (game.start_date) {
             events.push({ type: 'started', date: game.start_date, game });

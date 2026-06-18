@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Clock, Calendar, Euro, Tag, Star, Gamepad2, Disc, Cloud, HardDrive } from 'lucide-react';
+import { Edit2, Trash2, Clock, Calendar, Euro, Star, Gamepad2, Disc, Cloud, HardDrive } from 'lucide-react';
 import type { Game } from '../../types/game';
 import { getPlatformConfig } from '../../lib/platforms';
 
@@ -29,7 +29,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
     };
 
     const isPlayingOrOnHold = game.status === 'Playing' || game.status === 'On Hold';
-    const isBacklog = game.status === 'Backlog';
+    const isBacklog = game.status === 'Backlog' || game.status === 'Wishlist';
 
     const getDaysPlayed = () => {
         if (!game.start_date || isBacklog) return null;
@@ -79,40 +79,30 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
                     </div>
                 </header>
 
-                {/* Line 2: Platform & Genres */}
                 <div className="info-tags">
                     <span
                         className="info-tag platform-tag"
+                        title={game.platform}
                         style={{
                             color: platformConfig.color,
-                            borderColor: `${platformConfig.color}80`, // 50% opacity
-                            backgroundColor: `${platformConfig.color}33` // 20% opacity
+                            borderColor: `${platformConfig.color}80`,
+                            backgroundColor: `${platformConfig.color}33`
                         }}
                     >
                         <PlatformIcon size={14} />
-                        {game.platform}
                     </span>
-                    <span className="info-tag format-tag">
+                    <span className="info-tag format-tag" title={game.format}>
                         {game.format === 'Cloud' && <Cloud size={14} />}
                         {game.format === 'Physical' && <Disc size={14} />}
                         {game.format === 'Digital' && <HardDrive size={14} />}
-                        {game.format}
                     </span>
-                    {game.genres?.map(genre => (
-                        <span key={genre} className="info-tag"><Tag size={14} /> {genre}</span>
-                    ))}
+                    {game.rating && !isPlayingOrOnHold && !isBacklog && (
+                        <span className="info-tag rating-tag" style={{ marginLeft: 'auto' }}><Star size={14} fill="currentColor" /> {game.rating}/10</span>
+                    )}
                 </div>
 
-                {/* Line 3: Rating */}
-                {game.rating && !isPlayingOrOnHold && !isBacklog && (
-                    <div className="game-card-rating">
-                        <span className="info-tag rating-tag"><Star size={14} fill="currentColor" /> {game.rating}/10</span>
-                    </div>
-                )}
-
-                {/* Darker stats box */}
-                <div className="game-stats-grid">
-                    {!isBacklog && (
+                {!isBacklog && (
+                    <div className="game-stats-grid">
                         <div className="stat-item">
                             <Calendar size={14} className="stat-icon" />
                             <div className="stat-content">
@@ -120,60 +110,60 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
                                 <span className="stat-value">{formatDate(game.start_date)}</span>
                             </div>
                         </div>
-                    )}
 
-                    {!isPlayingOrOnHold && !isBacklog && (
-                        <div className="stat-item">
-                            <Calendar size={14} className="stat-icon" />
-                            <div className="stat-content">
-                                <span className="stat-label">Finished</span>
-                                <span className="stat-value">{formatDate(game.end_date)}</span>
+                        {!isPlayingOrOnHold && (
+                            <div className="stat-item">
+                                <Calendar size={14} className="stat-icon" />
+                                <div className="stat-content">
+                                    <span className="stat-label">Finished</span>
+                                    <span className="stat-value">{formatDate(game.end_date)}</span>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {!isBacklog && daysPlayed !== null && (
-                        <div className="stat-item">
-                            <Calendar size={14} className="stat-icon" />
-                            <div className="stat-content">
-                                <span className="stat-label">Days played</span>
-                                <span className="stat-value">{daysPlayed}</span>
+                        {daysPlayed !== null && (
+                            <div className="stat-item">
+                                <Calendar size={14} className="stat-icon" />
+                                <div className="stat-content">
+                                    <span className="stat-label">Days played</span>
+                                    <span className="stat-value">{daysPlayed}</span>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {!isPlayingOrOnHold && !isBacklog && (
-                        <div className="stat-item">
-                            <Clock size={14} className="stat-icon" />
-                            <div className="stat-content">
-                                <span className="stat-label">Playtime</span>
-                                <span className="stat-value">{game.hours_played ? `${game.hours_played}h` : 'N/A'}</span>
+                        {!isPlayingOrOnHold && (
+                            <div className="stat-item">
+                                <Clock size={14} className="stat-icon" />
+                                <div className="stat-content">
+                                    <span className="stat-label">Playtime</span>
+                                    <span className="stat-value">{game.hours_played ? `${game.hours_played}h` : 'N/A'}</span>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    <div className="stat-item">
-                        <Euro size={14} className="stat-icon" />
-                        <div className="stat-content">
-                            <span className="stat-label">Bought</span>
-                            <span className="stat-value price-item buy">
-                                €{game.purchasing_price ?? 'N/A'}
-                            </span>
-                        </div>
-                    </div>
-
-                    {!isPlayingOrOnHold && !isBacklog && (
                         <div className="stat-item">
                             <Euro size={14} className="stat-icon" />
                             <div className="stat-content">
-                                <span className="stat-label">Sold</span>
-                                <span className="stat-value price-item sell">
-                                    €{game.selling_price ?? 'N/A'}
+                                <span className="stat-label">Bought</span>
+                                <span className="stat-value price-item buy">
+                                    €{game.purchasing_price ?? 'N/A'}
                                 </span>
                             </div>
                         </div>
-                    )}
-                </div>
+
+                        {!isPlayingOrOnHold && (
+                            <div className="stat-item">
+                                <Euro size={14} className="stat-icon" />
+                                <div className="stat-content">
+                                    <span className="stat-label">Sold</span>
+                                    <span className="stat-value price-item sell">
+                                        €{game.selling_price ?? 'N/A'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </article>
     );

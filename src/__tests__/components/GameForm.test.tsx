@@ -9,6 +9,10 @@ vi.mock('../../lib/rawg', () => ({
     getGenres: vi.fn()
 }));
 
+vi.mock('../../lib/steamgriddb', () => ({
+    getBestCoverUrl: vi.fn().mockResolvedValue(null),
+}));
+
 describe('GameForm Autocomplete', () => {
     it('shows autocomplete dropdown and autofills form on selection', async () => {
         const onSubmit = vi.fn();

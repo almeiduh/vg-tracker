@@ -4,6 +4,7 @@ import type { Game, GameStatus, GameFormat } from '../../types/game';
 import { Input, Select } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { searchGames, getPlatforms, getGenres } from '../../lib/rawg';
+import { getBestCoverUrl } from '../../lib/steamgriddb';
 import { GenreMultiSelect } from '../ui/GenreMultiSelect';
 import type { RawgGameResult } from '../../lib/rawg';
 import { Search, Loader2 } from 'lucide-react';
@@ -17,6 +18,7 @@ interface GameFormProps {
 }
 
 const STATUS_OPTIONS = [
+    { value: 'Wishlist', label: 'Wishlist' },
     { value: 'Backlog', label: 'Backlog' },
     { value: 'Playing', label: 'Playing' },
     { value: 'On Hold', label: 'On Hold' },
@@ -170,8 +172,8 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
         // Capture average playtime from RAWG (transient, not persisted)
         setAveragePlaytime(game.playtime > 0 ? game.playtime : null);
 
+        // Set RAWG's background_image immediately, then try SteamGridDB for a better cover
         setFormData(prev => {
-            // Check if current platform is valid in the new restricted list
             const isCurrentPlatformValid = gamePlatforms ? gamePlatforms.includes(prev.platform) : true;
 
             return {
@@ -184,6 +186,13 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
         });
         setSearchQuery('');
         setShowDropdown(false);
+
+        // Background fetch: try to get a proper box-art cover from SteamGridDB
+        getBestCoverUrl(game.name).then(coverUrl => {
+            if (coverUrl) {
+                setFormData(prev => ({ ...prev, cover_url: coverUrl }));
+            }
+        });
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -200,7 +209,7 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
             if (formData.genres.length === 0) throw new Error('At least one genre is required');
             if (!formData.platform.trim()) throw new Error('Platform is required');
 
-            if (formData.start_date === '') throw new Error('Start date is required');
+            if (['Playing', 'Played', 'On Hold'].includes(formData.status) && formData.start_date === '') throw new Error('Start date is required');
             if (formData.status === 'Played' && formData.end_date === '') throw new Error('End date is required when status is Played');
 
             const parsedRating = formData.rating === '' ? null : Number(formData.rating);
@@ -216,7 +225,8 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
 
             let startIso = null;
             if (formData.start_date !== '') {
-                const startDate = new Date(formData.start_date);
+                const [year, month, day] = formData.start_date.split('-').map(Number);
+                const startDate = new Date(year, month - 1, day);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0); // Ignore time variations for date comparison
                 if (startDate > today) {
@@ -386,10 +396,10 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 />
 
                 <Input
-                    label="Start Date *"
+                    label={`Start Date${['Playing', 'Played', 'On Hold'].includes(formData.status) ? ' *' : ''}`}
                     name="start_date"
                     type="date"
-                    required
+                    required={['Playing', 'Played', 'On Hold'].includes(formData.status)}
                     max={new Date().toISOString().split('T')[0]}
                     value={formData.start_date}
                     onChange={handleChange}

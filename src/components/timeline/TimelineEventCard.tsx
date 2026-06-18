@@ -39,7 +39,7 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onE
     const eventLabel = isFinished ? 'Finished' : 'Started';
 
     const getDaysPlayed = () => {
-        if (!game.start_date || game.status === 'Backlog') return null;
+        if (!game.start_date || game.status === 'Backlog' || game.status === 'Wishlist') return null;
         const start = new Date(game.start_date);
         start.setHours(0, 0, 0, 0);
         const end = game.end_date ? new Date(game.end_date) : new Date();

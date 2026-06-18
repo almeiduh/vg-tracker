@@ -1,4 +1,4 @@
-export type GameStatus = "Playing" | "On Hold" | "Backlog" | "Played";
+export type GameStatus = "Playing" | "On Hold" | "Backlog" | "Played" | "Wishlist";
 export type GameFormat = "Digital" | "Physical" | "Cloud";
 
 export interface Game {

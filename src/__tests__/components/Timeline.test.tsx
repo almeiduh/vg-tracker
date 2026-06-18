@@ -47,9 +47,10 @@ describe('buildTimelineEvents', () => {
         expect(events[1].date).toBe('2026-01-01');
     });
 
-    it('excludes Backlog games entirely', () => {
+    it('excludes Backlog and Wishlist games entirely', () => {
         const games = [
             makeGame({ id: '3', status: 'Backlog', start_date: '2026-03-01' }),
+            makeGame({ id: '4', status: 'Wishlist', start_date: '2026-04-01' }),
         ];
         const events = buildTimelineEvents(games);
         expect(events).toHaveLength(0);

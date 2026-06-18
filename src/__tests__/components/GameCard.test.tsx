@@ -28,9 +28,8 @@ describe('GameCard', () => {
 
         // Basic Info
         expect(screen.getByText('Test Game Title')).toBeInTheDocument();
-        expect(screen.getByText('RPG')).toBeInTheDocument();
-        expect(screen.getByText('PlayStation 5')).toBeInTheDocument();
-        expect(screen.getByText('Physical')).toBeInTheDocument();
+        expect(screen.getByTitle('PlayStation 5')).toBeInTheDocument();
+        expect(screen.getByTitle('Physical')).toBeInTheDocument();
 
         // Cover Image
         const coverImage = screen.getByAltText('Test Game Title');
@@ -48,6 +47,29 @@ describe('GameCard', () => {
         expect(screen.getByText('€60')).toBeInTheDocument();
         expect(screen.queryByText('€N/A')).toBeInTheDocument(); // If selling price is null, it might show '€N/A' or 'N/A'. Wait, selling price is null so '€N/A'. 'N/A' was the previous.
         expect(screen.getByText('Jan 1, 2023')).toBeInTheDocument();
+    });
+
+    it('renders Wishlist game with minimal info (no rating, no dates, no playtime)', () => {
+        const onEdit = vi.fn();
+        const onDelete = vi.fn();
+
+        const wishlistGame: Game = {
+            ...mockGame,
+            status: 'Wishlist',
+            rating: null,
+            start_date: null,
+            end_date: null,
+            hours_played: null,
+            purchasing_price: 0,
+            selling_price: null,
+        };
+
+        render(<GameCard game={wishlistGame} onEdit={onEdit} onDelete={onDelete} showStatusBadge={true} />);
+
+        expect(screen.getByText('Test Game Title')).toBeInTheDocument();
+        expect(screen.getByText('Wishlist')).toBeInTheDocument();
+        expect(screen.queryByText(/\/10/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/N\/A/)).not.toBeInTheDocument();
     });
 
     it('calls onEdit when the edit button is clicked', () => {
