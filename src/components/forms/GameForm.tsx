@@ -4,7 +4,8 @@ import type { Game, GameStatus, GameFormat } from '../../types/game';
 import { Input, Select } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { searchGames, getPlatforms, getGenres } from '../../lib/rawg';
-import { getBestCoverUrl } from '../../lib/steamgriddb';
+import { searchSteamGridDb, getGameGrids } from '../../lib/steamgriddb';
+import type { SteamGridDbGrid } from '../../lib/steamgriddb';
 import { GenreMultiSelect } from '../ui/GenreMultiSelect';
 import type { RawgGameResult } from '../../lib/rawg';
 import { Search, Loader2 } from 'lucide-react';
@@ -66,6 +67,11 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
 
     // Transient RAWG average playtime (not persisted)
     const [averagePlaytime, setAveragePlaytime] = useState<number | null>(null);
+
+    // Cover carousel state
+    const [coverOptions, setCoverOptions] = useState<SteamGridDbGrid[]>([]);
+    const [selectedCoverIdx, setSelectedCoverIdx] = useState<number | null>(null);
+    const [isLoadingCovers, setIsLoadingCovers] = useState(false);
 
     // Fetch global platforms and genres on mount
     useEffect(() => {
@@ -172,7 +178,6 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
         // Capture average playtime from RAWG (transient, not persisted)
         setAveragePlaytime(game.playtime > 0 ? game.playtime : null);
 
-        // Set RAWG's background_image immediately, then try SteamGridDB for a better cover
         setFormData(prev => {
             const isCurrentPlatformValid = gamePlatforms ? gamePlatforms.includes(prev.platform) : true;
 
@@ -180,18 +185,31 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 ...prev,
                 title: game.name,
                 genres: game.genres.map(g => g.name),
-                cover_url: game.background_image,
+                cover_url: null,
                 platform: isCurrentPlatformValid ? prev.platform : ''
             };
         });
         setSearchQuery('');
         setShowDropdown(false);
+        setSelectedCoverIdx(null);
+        setCoverOptions([]);
 
-        // Background fetch: try to get a proper box-art cover from SteamGridDB
-        getBestCoverUrl(game.name).then(coverUrl => {
-            if (coverUrl) {
-                setFormData(prev => ({ ...prev, cover_url: coverUrl }));
+        // Fetch cover options from SteamGridDB
+        setIsLoadingCovers(true);
+        searchSteamGridDb(game.name).then(sgdbGame => {
+            if (!sgdbGame) {
+                setIsLoadingCovers(false);
+                return;
             }
+            getGameGrids(sgdbGame.id).then(grids => {
+                const options = grids.slice(0, 3);
+                setCoverOptions(options);
+                setIsLoadingCovers(false);
+                if (options.length > 0) {
+                    setSelectedCoverIdx(0);
+                    setFormData(prev => ({ ...prev, cover_url: options[0].url }));
+                }
+            });
         });
     };
 
@@ -284,13 +302,13 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                                     className="search-dropdown-item"
                                     onClick={() => handleSelectGame(game)}
                                 >
-                                    {game.background_image && (
-                                        <img src={game.background_image} alt={game.name} className="search-dropdown-img" />
-                                    )}
                                     <div className="search-dropdown-info">
                                         <span className="search-dropdown-title">{game.name}</span>
-                                        <span className="search-dropdown-genres">
+                                        <span className="search-dropdown-meta">
                                             {game.genres.map(g => g.name).join(', ')}
+                                            {game.platforms && game.platforms.length > 0 && (
+                                                <> · {game.platforms.map(p => p.platform.name).join(', ')}</>
+                                            )}
                                         </span>
                                     </div>
                                 </li>
@@ -300,22 +318,38 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 )}
             </div>
 
+            {/* Cover Carousel */}
+            {(coverOptions.length > 0 || isLoadingCovers) && (
+                <div className="cover-section col-span-full">
+                    <label className="cover-section-label">Cover Image</label>
+                    {isLoadingCovers ? (
+                        <div className="cover-loading">
+                            <Loader2 className="spinner" size={18} />
+                            <span>Loading covers...</span>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="cover-carousel">
+                                {coverOptions.map((grid, idx) => (
+                                    <button
+                                        key={grid.id}
+                                        type="button"
+                                        className={`cover-option${selectedCoverIdx === idx ? ' selected' : ''}`}
+                                        onClick={() => {
+                                            setSelectedCoverIdx(idx);
+                                            setFormData(prev => ({ ...prev, cover_url: grid.url }));
+                                        }}
+                                    >
+                                        <img src={grid.thumb || grid.url} alt={`Cover ${idx + 1}`} className="cover-option-img" />
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
+
             <div className="form-grid">
-                {/* Cover Preview (if selected) */}
-                {formData.cover_url && (
-                    <div className="cover-preview-container col-span-full">
-                        <img src={formData.cover_url} alt="Cover Preview" className="form-cover-preview" />
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setFormData(prev => ({ ...prev, cover_url: null }))}
-                            className="remove-cover-btn danger-hover"
-                        >
-                            Remove Cover
-                        </Button>
-                    </div>
-                )}
 
                 <Input
                     label="Title *"

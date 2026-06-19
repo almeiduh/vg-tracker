@@ -1,4 +1,7 @@
-// SteamGridDB API Service — fetches game cover art (vertial box art)
+// SteamGridDB API Service — fetches game cover art via Supabase Edge Function proxy.
+// The edge function handles the API key server-side and avoids CORS issues.
+
+import { supabase } from './supabase';
 
 export interface SteamGridDbGame {
     id: number;
@@ -13,63 +16,45 @@ export interface SteamGridDbGrid {
     dimensions: string;
 }
 
-const SGDB_BASE_URL = 'https://www.steamgriddb.com/api/v2';
-
-function getApiKey(): string | null {
-    return import.meta.env.VITE_STEAMGRIDDB_API_KEY || null;
+interface SgdbResponse<T> {
+    success: boolean;
+    data: T[];
 }
 
 /**
- * Searches for a game by name on SteamGridDB.
+ * Searches for a game by name on SteamGridDB via the edge function proxy.
  * Returns the best-matching game entry or null.
  */
 export async function searchSteamGridDb(query: string): Promise<SteamGridDbGame | null> {
-    const apiKey = getApiKey();
-    if (!apiKey) return null;
-
     if (!query.trim()) return null;
 
     try {
-        const url = new URL(`${SGDB_BASE_URL}/search/autocomplete/${encodeURIComponent(query.trim())}`);
-        const response = await fetch(url.toString(), {
-            headers: { Authorization: `Bearer ${apiKey}` },
-        });
-
-        if (!response.ok) return null;
-
-        const data = await response.json() as { success: boolean; data: SteamGridDbGame[] };
-        return data.success && data.data.length > 0 ? data.data[0] : null;
+        const { data, error } = await supabase.functions.invoke<SgdbResponse<SteamGridDbGame>>(
+            'steamgriddb-proxy',
+            { body: { action: 'search', query: query.trim() } }
+        );
+        if (error) return null;
+        return data?.success && data.data.length > 0 ? data.data[0] : null;
     } catch {
         return null;
     }
 }
 
 /**
- * Fetches grid (cover) images for a SteamGridDB game ID.
- * Filters to vertical cover dimensions (600x900 or 342x482).
- * Returns the best cover URL or null.
+ * Fetches grid (cover) images for a SteamGridDB game ID via the edge function proxy.
+ * Returns an array of grid objects (up to 5 by default).
  */
-export async function getGameGrids(gameId: number): Promise<string | null> {
-    const apiKey = getApiKey();
-    if (!apiKey) return null;
-
+export async function getGameGrids(gameId: number): Promise<SteamGridDbGrid[]> {
     try {
-        const url = new URL(`${SGDB_BASE_URL}/grids/game/${gameId}`);
-        url.searchParams.append('dimensions', '600x900,342x482');
-        url.searchParams.append('limit', '5');
-
-        const response = await fetch(url.toString(), {
-            headers: { Authorization: `Bearer ${apiKey}` },
-        });
-
-        if (!response.ok) return null;
-
-        const data = await response.json() as { success: boolean; data: SteamGridDbGrid[] };
-        if (!data.success || data.data.length === 0) return null;
-
-        return data.data[0].url;
+        const { data, error } = await supabase.functions.invoke<SgdbResponse<SteamGridDbGrid>>(
+            'steamgriddb-proxy',
+            { body: { action: 'grids', gameId } }
+        );
+        if (error) return [];
+        if (!data?.success || data.data.length === 0) return [];
+        return data.data;
     } catch {
-        return null;
+        return [];
     }
 }
 
@@ -80,5 +65,6 @@ export async function getGameGrids(gameId: number): Promise<string | null> {
 export async function getBestCoverUrl(title: string): Promise<string | null> {
     const game = await searchSteamGridDb(title);
     if (!game) return null;
-    return getGameGrids(game.id);
+    const grids = await getGameGrids(game.id);
+    return grids.length > 0 ? grids[0].url : null;
 }

@@ -10,7 +10,8 @@ vi.mock('../../lib/rawg', () => ({
 }));
 
 vi.mock('../../lib/steamgriddb', () => ({
-    getBestCoverUrl: vi.fn().mockResolvedValue(null),
+    searchSteamGridDb: vi.fn().mockResolvedValue(null),
+    getGameGrids: vi.fn().mockResolvedValue([]),
 }));
 
 describe('GameForm Autocomplete', () => {
@@ -47,10 +48,8 @@ describe('GameForm Autocomplete', () => {
         // Verify genres auto-filled as chips
         expect(screen.getByText('Action')).toBeInTheDocument();
 
-        // Verify cover preview is shown
-        const coverPreview = screen.getByAltText('Cover Preview');
-        expect(coverPreview).toBeInTheDocument();
-        expect(coverPreview).toHaveAttribute('src', 'cover.jpg');
+        // Verify search result shows platforms in metadata
+        expect(screen.getByText(/Nintendo Switch/)).toBeInTheDocument();
 
         // Verify Platform options are constrained
         const platformSelect = screen.getByLabelText(/Platform \*/i) as HTMLSelectElement;
@@ -62,6 +61,93 @@ describe('GameForm Autocomplete', () => {
         // Ensure PC is no longer an option since the game isn't on PC
         const pcOption = Array.from(platformSelect.options).find(opt => opt.value === 'PC');
         expect(pcOption).toBeUndefined();
+    });
+});
+
+describe('GameForm Cover Carousel', () => {
+    it('fetches and displays cover options from SteamGridDB after selecting a game', async () => {
+        const onSubmit = vi.fn();
+        const onCancel = vi.fn();
+
+        (rawgService.getPlatforms as any).mockResolvedValue(['PC', 'Nintendo Switch']);
+        (rawgService.getGenres as any).mockResolvedValue(['Action', 'RPG', 'Adventure']);
+        (rawgService.searchGames as any).mockResolvedValue([
+            { id: 1, name: 'Test Game Result', background_image: null, genres: [{ name: 'Action' }], platforms: [{ platform: { name: 'Nintendo Switch' } }] }
+        ]);
+
+        const steamgriddb = await import('../../lib/steamgriddb');
+        (steamgriddb.searchSteamGridDb as any).mockResolvedValue({ id: 42, name: 'Test Game Result', types: ['grid'] });
+        (steamgriddb.getGameGrids as any).mockResolvedValue([
+            { id: 1, url: 'https://cdn.example.com/cover1.jpg', thumb: 'https://cdn.example.com/thumb1.jpg', dimensions: '600x900' },
+            { id: 2, url: 'https://cdn.example.com/cover2.jpg', thumb: 'https://cdn.example.com/thumb2.jpg', dimensions: '600x900' },
+            { id: 3, url: 'https://cdn.example.com/cover3.jpg', thumb: 'https://cdn.example.com/thumb3.jpg', dimensions: '342x482' },
+        ]);
+
+        render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
+
+        // Type in the search input
+        const searchInput = screen.getByPlaceholderText('Search for a game...');
+        fireEvent.change(searchInput, { target: { value: 'Test' } });
+        fireEvent.focus(searchInput);
+
+        // Wait for the debounced search to finish and dropdown to appear
+        await waitFor(() => {
+            expect(screen.getByText('Test Game Result')).toBeInTheDocument();
+        }, { timeout: 1000 });
+
+        // Click the suggestion
+        fireEvent.click(screen.getByText('Test Game Result'));
+
+        // Wait for cover carousel to appear
+        await waitFor(() => {
+            expect(screen.getByText('Cover Image')).toBeInTheDocument();
+        });
+
+        // Should show 3 cover options
+        const coverImages = screen.getAllByRole('button').filter(
+            btn => btn.classList.contains('cover-option')
+        );
+        expect(coverImages).toHaveLength(3);
+
+        // Click the second cover option
+        fireEvent.click(coverImages[1]);
+
+        // Selected class should be on the second option
+        expect(coverImages[1].classList.contains('selected')).toBe(true);
+        expect(coverImages[0].classList.contains('selected')).toBe(false);
+    });
+
+    it('shows loading state while fetching covers', async () => {
+        const onSubmit = vi.fn();
+        const onCancel = vi.fn();
+
+        (rawgService.getPlatforms as any).mockResolvedValue(['PC']);
+        (rawgService.getGenres as any).mockResolvedValue(['Action']);
+        (rawgService.searchGames as any).mockResolvedValue([
+            { id: 1, name: 'Test Game', background_image: null, genres: [{ name: 'Action' }], platforms: [] }
+        ]);
+
+        const steamgriddb = await import('../../lib/steamgriddb');
+        // Don't resolve immediately to see loading state
+        (steamgriddb.searchSteamGridDb as any).mockImplementation(() => new Promise(() => {}));
+
+        render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
+
+        // Search and select a game
+        const searchInput = screen.getByPlaceholderText('Search for a game...');
+        fireEvent.change(searchInput, { target: { value: 'Test' } });
+        fireEvent.focus(searchInput);
+
+        await waitFor(() => {
+            expect(screen.getByText('Test Game')).toBeInTheDocument();
+        }, { timeout: 1000 });
+
+        fireEvent.click(screen.getByText('Test Game'));
+
+        // Should show loading state
+        await waitFor(() => {
+            expect(screen.getByText('Loading covers...')).toBeInTheDocument();
+        });
     });
 });
 
@@ -234,11 +320,9 @@ describe('GameForm Validations', () => {
         fireEvent.change(screen.getByLabelText(/Purchasing Price/i), { target: { value: '0' } });
         fireEvent.change(screen.getByLabelText(/Selling Price/i), { target: { value: '0' } });
 
-        // Insert future start date (tomorrow)
+        // Insert future start date (use a fixed far-future date to avoid timezone edge cases)
         const dateInput = screen.getByLabelText(/Start Date/i);
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        fireEvent.change(dateInput, { target: { value: tomorrow.toISOString().split('T')[0] } });
+        fireEvent.change(dateInput, { target: { value: '2030-06-15' } });
 
         // Submit form
         fireEvent.submit(screen.getByText('Add Game').closest('form')!);
