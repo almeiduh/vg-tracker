@@ -149,6 +149,50 @@
     text-overflow: ellipsis;
 }
 
+/* --- Selected Game Info --- */
+.selected-game-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+}
+
+.selected-game-info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.selected-game-info-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    min-width: 7rem;
+    flex-shrink: 0;
+}
+
+.selected-game-info-value {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.selected-game-info-description {
+    margin-top: 0.25rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-light);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 /* --- Cover Section --- */
 .cover-section {
     display: flex;
@@ -208,21 +252,3 @@
     object-fit: cover;
 }
 
-/* --- Average Playtime Hint --- */
-.hours-played-wrapper {
-    position: relative;
-}
-
-.avg-playtime-hint {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin-top: 0.375rem;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-sm, 0.25rem);
-    letter-spacing: 0.01em;
-}

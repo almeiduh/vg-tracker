@@ -67,10 +67,10 @@ export const Dashboard = () => {
                     <Button
                         onClick={() => handleOpenModal()}
                         variant="primary"
-                        style={{ borderRadius: '9999px', padding: '0.6rem 1.5rem', fontWeight: 600, letterSpacing: '0.5px' }}
+                        style={{ borderRadius: '50%', width: '40px', height: '40px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="Add Game"
                     >
-                        <Plus size={20} strokeWidth={2.5} />
-                        Add Game
+                        <Plus size={22} strokeWidth={2.5} />
                     </Button>
                 </div>
             </div>

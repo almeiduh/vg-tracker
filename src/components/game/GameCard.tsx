@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Clock, Calendar, Euro, Star, Gamepad2, Disc, Cloud, HardDrive } from 'lucide-react';
+import { Edit2, Trash2, Clock, Calendar, Star, Gamepad2, Disc, Cloud, HardDrive, ShoppingCart, TrendingUp } from 'lucide-react';
 import type { Game } from '../../types/game';
 import { getPlatformConfig } from '../../lib/platforms';
 
@@ -125,7 +125,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
                             <div className="stat-item">
                                 <Calendar size={14} className="stat-icon" />
                                 <div className="stat-content">
-                                    <span className="stat-label">Days played</span>
+                                    <span className="stat-label">Days</span>
                                     <span className="stat-value">{daysPlayed}</span>
                                 </div>
                             </div>
@@ -141,23 +141,25 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
                             </div>
                         )}
 
-                        <div className="stat-item">
-                            <Euro size={14} className="stat-icon" />
-                            <div className="stat-content">
-                                <span className="stat-label">Bought</span>
-                                <span className="stat-value price-item buy">
-                                    €{game.purchasing_price ?? 'N/A'}
-                                </span>
-                            </div>
-                        </div>
-
-                        {!isPlayingOrOnHold && (
+                        {game.purchasing_price != null && (
                             <div className="stat-item">
-                                <Euro size={14} className="stat-icon" />
+                                <ShoppingCart size={14} className="stat-icon" />
+                                <div className="stat-content">
+                                    <span className="stat-label">Cost</span>
+                                    <span className={`stat-value ${game.purchasing_price > 0 ? 'price-item buy' : 'price-item free'}`}>
+                                        {game.purchasing_price > 0 ? `€${game.purchasing_price}` : 'Free'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {!isPlayingOrOnHold && game.selling_price != null && game.selling_price > 0 && (
+                            <div className="stat-item">
+                                <TrendingUp size={14} className="stat-icon" />
                                 <div className="stat-content">
                                     <span className="stat-label">Sold</span>
                                     <span className="stat-value price-item sell">
-                                        €{game.selling_price ?? 'N/A'}
+                                        €{game.selling_price}
                                     </span>
                                 </div>
                             </div>

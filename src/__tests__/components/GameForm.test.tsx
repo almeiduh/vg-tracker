@@ -41,13 +41,6 @@ describe('GameForm Autocomplete', () => {
         // Click the suggestion
         fireEvent.click(screen.getByText('Test Game Result'));
 
-        // Verify autofill applied to the regular inputs
-        const titleInput = screen.getByLabelText(/Title \*/i);
-        expect(titleInput).toHaveValue('Test Game Result');
-
-        // Verify genres auto-filled as chips
-        expect(screen.getByText('Action')).toBeInTheDocument();
-
         // Verify search result shows platforms in metadata
         expect(screen.getByText(/Nintendo Switch/)).toBeInTheDocument();
 
@@ -151,66 +144,24 @@ describe('GameForm Cover Carousel', () => {
     });
 });
 
-describe('GameForm GenreMultiSelect', () => {
-    it('renders genre options fetched from RAWG in the dropdown', async () => {
-        const onSubmit = vi.fn();
-        const onCancel = vi.fn();
+async function selectGameViaRawg(name: string = 'Test Game') {
+    (rawgService.searchGames as any).mockResolvedValue([
+        { id: 1, name, background_image: null, genres: [{ name: 'Action' }], platforms: [{ platform: { name: 'PC' } }] }
+    ]);
 
-        (rawgService.getPlatforms as any).mockResolvedValue(['PC']);
-        (rawgService.getGenres as any).mockResolvedValue(['Action', 'RPG', 'Adventure']);
-        (rawgService.searchGames as any).mockResolvedValue([]);
+    const searchInput = screen.getByPlaceholderText('Search for a game...');
+    fireEvent.change(searchInput, { target: { value: name } });
+    fireEvent.focus(searchInput);
 
-        render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
+    await waitFor(() => {
+        expect(screen.getByText(name)).toBeInTheDocument();
+    }, { timeout: 1000 });
 
-        // Wait for genres to load
-        await waitFor(() => {
-            expect(rawgService.getGenres).toHaveBeenCalled();
-        });
+    fireEvent.click(screen.getByText(name));
 
-        // Open the genre dropdown
-        const genreTrigger = screen.getByText('Select genres…');
-        fireEvent.click(genreTrigger);
-
-        // All options should be visible
-        expect(screen.getByText('Action')).toBeInTheDocument();
-        expect(screen.getByText('RPG')).toBeInTheDocument();
-        expect(screen.getByText('Adventure')).toBeInTheDocument();
-    });
-
-    it('allows selecting and deselecting genres', async () => {
-        const onSubmit = vi.fn();
-        const onCancel = vi.fn();
-
-        (rawgService.getPlatforms as any).mockResolvedValue(['PC']);
-        (rawgService.getGenres as any).mockResolvedValue(['Action', 'RPG']);
-        (rawgService.searchGames as any).mockResolvedValue([]);
-
-        render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
-
-        // Wait for genres to load
-        await waitFor(() => {
-            expect(rawgService.getGenres).toHaveBeenCalled();
-        });
-
-        // Open dropdown and select Action
-        const genreTrigger = screen.getByText('Select genres…');
-        fireEvent.click(genreTrigger);
-
-        const actionOption = screen.getByRole('option', { name: /Action/i });
-        fireEvent.click(actionOption);
-
-        // The chip should appear in the trigger (along with possibly the dropdown option)
-        const actionChips = screen.getAllByText('Action');
-        expect(actionChips.length).toBeGreaterThan(0);
-
-        // Deselect it via the remove button on the chip
-        const removeBtn = screen.getByLabelText('Remove Action');
-        fireEvent.click(removeBtn);
-
-        // Should show placeholder again
-        expect(screen.getByText('Select genres…')).toBeInTheDocument();
-    });
-});
+    // Select the constrained platform
+    fireEvent.change(screen.getByLabelText(/Platform \*/i), { target: { value: 'PC' } });
+}
 
 describe('GameForm Validations', () => {
     it('shows error if purchasing price is negative', async () => {
@@ -222,28 +173,17 @@ describe('GameForm Validations', () => {
 
         render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
 
-        // Wait for required data
         await waitFor(() => {
             expect(rawgService.getPlatforms).toHaveBeenCalled();
         });
 
-        // Fill required fields
-        fireEvent.change(screen.getByLabelText(/Title \*/i), { target: { value: 'Test' } });
-        fireEvent.change(screen.getByLabelText(/Platform \*/i), { target: { value: 'PC' } });
+        await selectGameViaRawg();
 
-        // Add a genre
-        const genreTrigger = screen.getByText('Select genres…');
-        fireEvent.click(genreTrigger);
-        fireEvent.click(screen.getByRole('option', { name: /Action/i }));
-
-        // Fill other required fields
         fireEvent.change(screen.getByLabelText(/Selling Price/i), { target: { value: '0' } });
 
-        // Insert invalid negative purchasing price
         const priceInput = screen.getByLabelText(/Purchasing Price/i);
         fireEvent.change(priceInput, { target: { value: '-5' } });
 
-        // Submit form
         fireEvent.submit(screen.getByText('Add Game').closest('form')!);
 
         await waitFor(() => {
@@ -262,28 +202,17 @@ describe('GameForm Validations', () => {
 
         render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
 
-        // Wait for required data
         await waitFor(() => {
             expect(rawgService.getPlatforms).toHaveBeenCalled();
         });
 
-        // Fill required fields
-        fireEvent.change(screen.getByLabelText(/Title \*/i), { target: { value: 'Test' } });
-        fireEvent.change(screen.getByLabelText(/Platform \*/i), { target: { value: 'PC' } });
+        await selectGameViaRawg();
 
-        // Add a genre
-        const genreTrigger = screen.getByText('Select genres…');
-        fireEvent.click(genreTrigger);
-        fireEvent.click(screen.getByRole('option', { name: /Action/i }));
-
-        // Fill other required fields
         fireEvent.change(screen.getByLabelText(/Purchasing Price/i), { target: { value: '0' } });
 
-        // Insert invalid negative selling price
         const priceInput = screen.getByLabelText(/Selling Price/i);
         fireEvent.change(priceInput, { target: { value: '-10' } });
 
-        // Submit form
         fireEvent.submit(screen.getByText('Add Game').closest('form')!);
 
         await waitFor(() => {
@@ -302,29 +231,18 @@ describe('GameForm Validations', () => {
 
         render(<GameForm onSubmit={onSubmit} onCancel={onCancel} />);
 
-        // Wait for required data
         await waitFor(() => {
             expect(rawgService.getPlatforms).toHaveBeenCalled();
         });
 
-        // Fill required fields
-        fireEvent.change(screen.getByLabelText(/Title \*/i), { target: { value: 'Test' } });
-        fireEvent.change(screen.getByLabelText(/Platform \*/i), { target: { value: 'PC' } });
+        await selectGameViaRawg();
 
-        // Add a genre
-        const genreTrigger = screen.getByText('Select genres…');
-        fireEvent.click(genreTrigger);
-        fireEvent.click(screen.getByRole('option', { name: /Action/i }));
-
-        // Fill other required fields
         fireEvent.change(screen.getByLabelText(/Purchasing Price/i), { target: { value: '0' } });
         fireEvent.change(screen.getByLabelText(/Selling Price/i), { target: { value: '0' } });
 
-        // Insert future start date (use a fixed far-future date to avoid timezone edge cases)
         const dateInput = screen.getByLabelText(/Start Date/i);
         fireEvent.change(dateInput, { target: { value: '2030-06-15' } });
 
-        // Submit form
         fireEvent.submit(screen.getByText('Add Game').closest('form')!);
 
         await waitFor(() => {
@@ -347,19 +265,13 @@ describe('GameForm Validations', () => {
             expect(rawgService.getPlatforms).toHaveBeenCalled();
         });
 
-        fireEvent.change(screen.getByLabelText(/Title \*/i), { target: { value: 'Test' } });
-        fireEvent.change(screen.getByLabelText(/Platform \*/i), { target: { value: 'PC' } });
+        await selectGameViaRawg();
 
-        fireEvent.click(screen.getByText('Select genres…'));
-        fireEvent.click(screen.getByRole('option', { name: /Action/i }));
-
-        // Clear the form value since there are defaults
         const purchasingInput = screen.getByLabelText(/Purchasing Price/i);
         const sellingInput = screen.getByLabelText(/Selling Price/i);
         fireEvent.change(purchasingInput, { target: { value: '' } });
         fireEvent.change(sellingInput, { target: { value: '' } });
 
-        // Submit form
         fireEvent.submit(screen.getByText('Add Game').closest('form')!);
 
         await waitFor(() => {
@@ -384,10 +296,8 @@ describe('GameForm Validations', () => {
             expect(rawgService.getPlatforms).toHaveBeenCalled();
         });
 
-        // Set start date
         fireEvent.change(screen.getByLabelText(/Start Date/i), { target: { value: '2026-02-15' } });
 
-        // End date input should have min set to 2026-02-16 (start + 1 day)
         const endDateInput = screen.getByLabelText(/End Date/i);
         expect(endDateInput).toHaveAttribute('min', '2026-02-16');
     });

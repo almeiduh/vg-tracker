@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Calendar, Clock, Gamepad2 } from 'lucide-react';
+import { Edit2, Trash2, Calendar, Clock, Gamepad2, Star } from 'lucide-react';
 import type { Game } from '../../types/game';
 import { getPlatformConfig } from '../../lib/platforms';
 
@@ -99,7 +99,7 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onE
                                 {game.hours_played}h
                             </span>
                         )}
-                        {daysPlayed !== null && (
+                        {isFinished && daysPlayed !== null && (
                             <span className="timeline-badge">
                                 <Calendar size={14} />
                                 {daysPlayed} {daysPlayed === 1 ? 'day' : 'days'}
@@ -113,14 +113,20 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onE
 
                 {/* Rating bar — finished events only */}
                 {isFinished && game.rating != null && (
-                    <div className="timeline-rating-row">
-                        <div className="timeline-rating-bar">
-                            <div
-                                className="timeline-rating-fill"
-                                style={{ width: `${(game.rating / 10) * 100}%` }}
-                            />
-                        </div>
-                        <span className="timeline-rating-score">{game.rating}/10</span>
+                    <div className="star-rating-row">
+                        {Array.from({ length: 10 }, (_, i) => {
+                            const filled = i + 1 <= game.rating!;
+                            return (
+                                <Star
+                                    key={i}
+                                    size={16}
+                                    strokeWidth={1.5}
+                                    fill={filled ? 'var(--accent-blue)' : 'none'}
+                                    color={filled ? 'var(--accent-blue)' : 'var(--text-muted)'}
+                                />
+                            );
+                        })}
+                        <span className="star-rating-value">{game.rating}/10</span>
                     </div>
                 )}
             </div>

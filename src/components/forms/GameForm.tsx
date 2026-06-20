@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Clock } from 'lucide-react';
+import { Heart, ListTodo, PlayCircle, PauseCircle, CheckCircle, Monitor, Package, Cloud } from 'lucide-react';
 import type { Game, GameStatus, GameFormat } from '../../types/game';
 import { Input, Select } from '../ui/Input';
+import { PillSelect } from '../ui/PillSelect';
+import { StarRating } from '../ui/StarRating';
 import { Button } from '../ui/Button';
-import { searchGames, getPlatforms, getGenres } from '../../lib/rawg';
+import { searchGames, getPlatforms } from '../../lib/rawg';
 import { searchSteamGridDb, getGameGrids } from '../../lib/steamgriddb';
 import type { SteamGridDbGrid } from '../../lib/steamgriddb';
-import { GenreMultiSelect } from '../ui/GenreMultiSelect';
+
 import type { RawgGameResult } from '../../lib/rawg';
 import { Search, Loader2 } from 'lucide-react';
 import './GameForm.css';
@@ -19,17 +21,17 @@ interface GameFormProps {
 }
 
 const STATUS_OPTIONS = [
-    { value: 'Wishlist', label: 'Wishlist' },
-    { value: 'Backlog', label: 'Backlog' },
-    { value: 'Playing', label: 'Playing' },
-    { value: 'On Hold', label: 'On Hold' },
-    { value: 'Played', label: 'Played' },
+    { value: 'Wishlist', label: 'Wishlist', icon: <Heart size={16} />, color: 'var(--accent-pink)' },
+    { value: 'Backlog', label: 'Backlog', icon: <ListTodo size={16} />, color: 'var(--warning-alt)' },
+    { value: 'Playing', label: 'Playing', icon: <PlayCircle size={16} />, color: 'var(--success)' },
+    { value: 'On Hold', label: 'On Hold', icon: <PauseCircle size={16} />, color: 'var(--warning)' },
+    { value: 'Played', label: 'Played', icon: <CheckCircle size={16} />, color: 'var(--success)' },
 ];
 
 const FORMAT_OPTIONS = [
-    { value: 'Digital', label: 'Digital' },
-    { value: 'Physical', label: 'Physical' },
-    { value: 'Cloud', label: 'Cloud' },
+    { value: 'Digital', label: 'Digital', icon: <Monitor size={16} /> },
+    { value: 'Physical', label: 'Physical', icon: <Package size={16} /> },
+    { value: 'Cloud', label: 'Cloud', icon: <Cloud size={16} /> },
 ];
 
 export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCancel, isLoading }) => {
@@ -58,15 +60,15 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
     const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const searchContainerRef = useRef<HTMLDivElement>(null);
 
-    // Genre options state
-    const [genreOptions, setGenreOptions] = useState<string[]>([]);
-
     // Platform constraint state
     const [platformOptions, setPlatformOptions] = useState<{ value: string, label: string }[]>([]);
     const [restrictedPlatforms, setRestrictedPlatforms] = useState<string[] | null>(null);
 
     // Transient RAWG average playtime (not persisted)
     const [averagePlaytime, setAveragePlaytime] = useState<number | null>(null);
+
+    // Selected game details from RAWG (display only)
+    const [selectedGame, setSelectedGame] = useState<RawgGameResult | null>(null);
 
     // Cover carousel state
     const [coverOptions, setCoverOptions] = useState<SteamGridDbGrid[]>([]);
@@ -89,12 +91,6 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
             setPlatformOptions(options);
         }).catch(console.error);
 
-        getGenres().then(genres => {
-            if (genres.length === 0) {
-                genres = ['Action', 'Adventure', 'RPG', 'Strategy', 'Puzzle', 'Indie', 'Shooter', 'Platformer', 'Racing', 'Sports'];
-            }
-            setGenreOptions(genres);
-        }).catch(console.error);
     }, []);
 
     useEffect(() => {
@@ -114,15 +110,31 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 format: initialData.format ?? 'Digital'
             });
 
-            // In edit mode, try to fetch the average playtime from RAWG based on the title
+            // In edit mode, try to fetch game details from RAWG based on the title
             searchGames(initialData.title, 1)
                 .then(results => {
                     if (results && results.length > 0) {
                         const game = results[0];
+                        setSelectedGame(game);
                         setAveragePlaytime(game.playtime > 0 ? game.playtime : null);
                     }
                 })
                 .catch(console.error);
+
+            // In edit mode, fetch cover options from SteamGridDB
+            setIsLoadingCovers(true);
+            searchSteamGridDb(initialData.title).then(sgdbGame => {
+                if (!sgdbGame) {
+                    setIsLoadingCovers(false);
+                    return;
+                }
+                getGameGrids(sgdbGame.id).then(grids => {
+                    const options = grids.slice(0, 5);
+                    setCoverOptions(options);
+                    setIsLoadingCovers(false);
+                    setSelectedCoverIdx(options.findIndex(g => g.url === initialData.cover_url));
+                });
+            });
         }
     }, [initialData]);
 
@@ -166,6 +178,8 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
     };
 
     const handleSelectGame = (game: RawgGameResult) => {
+        setSelectedGame(game);
+
         // Extract restricted platforms
         let gamePlatforms: string[] | null = null;
         if (game.platforms && game.platforms.length > 0) {
@@ -202,7 +216,7 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 return;
             }
             getGameGrids(sgdbGame.id).then(grids => {
-                const options = grids.slice(0, 3);
+                const options = grids.slice(0, 5);
                 setCoverOptions(options);
                 setIsLoadingCovers(false);
                 if (options.length > 0) {
@@ -318,6 +332,55 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                 )}
             </div>
 
+            {/* Selected Game Info */}
+            {formData.title && (
+                <div className="selected-game-info">
+                    <div className="selected-game-info-row">
+                        <span className="selected-game-info-label">Title</span>
+                        <span className="selected-game-info-value">{formData.title}</span>
+                    </div>
+                    {formData.genres.length > 0 && (
+                        <div className="selected-game-info-row">
+                            <span className="selected-game-info-label">Genres</span>
+                            <span className="selected-game-info-value">{formData.genres.join(', ')}</span>
+                        </div>
+                    )}
+                    {selectedGame?.released && (
+                        <div className="selected-game-info-row">
+                            <span className="selected-game-info-label">Released</span>
+                            <span className="selected-game-info-value">{selectedGame.released}</span>
+                        </div>
+                    )}
+                    {(selectedGame?.metacritic ?? null) !== null && (
+                        <div className="selected-game-info-row">
+                            <span className="selected-game-info-label">Metacritic</span>
+                            <span className="selected-game-info-value">{selectedGame!.metacritic}/100</span>
+                        </div>
+                    )}
+                    {selectedGame?.developers && selectedGame.developers.length > 0 && (
+                        <div className="selected-game-info-row">
+                            <span className="selected-game-info-label">Developer</span>
+                            <span className="selected-game-info-value">{selectedGame.developers.map(d => d.name).join(', ')}</span>
+                        </div>
+                    )}
+                    {selectedGame?.publishers && selectedGame.publishers.length > 0 && (
+                        <div className="selected-game-info-row">
+                            <span className="selected-game-info-label">Publisher</span>
+                            <span className="selected-game-info-value">{selectedGame.publishers.map(p => p.name).join(', ')}</span>
+                        </div>
+                    )}
+                    {selectedGame?.description_raw && (
+                        <div className="selected-game-info-description">{selectedGame.description_raw}</div>
+                    )}
+                    {averagePlaytime !== null && (
+                        <div className="selected-game-info-row">
+                            <span className="selected-game-info-label">Avg. Time to Beat</span>
+                            <span className="selected-game-info-value">{averagePlaytime}h</span>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Cover Carousel */}
             {(coverOptions.length > 0 || isLoadingCovers) && (
                 <div className="cover-section col-span-full">
@@ -351,23 +414,6 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
 
             <div className="form-grid">
 
-                <Input
-                    label="Title *"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g. The Legend of Zelda: Tears of the Kingdom"
-                    className="col-span-full"
-                />
-
-                <GenreMultiSelect
-                    label="Genres *"
-                    options={genreOptions}
-                    value={formData.genres}
-                    onChange={(selected) => setFormData(prev => ({ ...prev, genres: selected }))}
-                />
-
                 <Select
                     label="Platform *"
                     name="platform"
@@ -382,31 +428,27 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                     ]}
                 />
 
-                <Select
+                <PillSelect
                     label="Status"
-                    name="status"
                     value={formData.status}
-                    onChange={handleChange}
+                    onChange={(value) => setFormData(prev => ({ ...prev, status: value as GameStatus }))}
                     options={STATUS_OPTIONS}
+                    className="col-span-full"
                 />
 
-                <Select
-                    label="Format *"
-                    name="format"
+                <PillSelect
+                    label="Format"
                     value={formData.format}
-                    onChange={handleChange}
-                    required
+                    onChange={(value) => setFormData(prev => ({ ...prev, format: value as GameFormat }))}
                     options={FORMAT_OPTIONS}
+                    className="col-span-full"
                 />
 
-                <Input
-                    label="Rating (1-10)"
-                    name="rating"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={formData.rating}
-                    onChange={handleChange}
+                <StarRating
+                    label="Rating"
+                    value={String(formData.rating)}
+                    onChange={(value) => setFormData(prev => ({ ...prev, rating: value }))}
+                    className="col-span-full"
                 />
 
                 <Input
@@ -448,23 +490,15 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
                     onChange={handleChange}
                 />
 
-                <div className="hours-played-wrapper">
-                    <Input
-                        label="Hours Played"
-                        name="hours_played"
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value={formData.hours_played}
-                        onChange={handleChange}
-                    />
-                    {averagePlaytime !== null && (
-                        <span className="avg-playtime-hint">
-                            <Clock size={12} />
-                            Community avg: {averagePlaytime}h
-                        </span>
-                    )}
-                </div>
+                <Input
+                    label="Hours Played"
+                    name="hours_played"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={formData.hours_played}
+                    onChange={handleChange}
+                />
             </div>
 
             {error && <div className="form-error glass-panel">{error}</div>}

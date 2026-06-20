@@ -245,6 +245,10 @@
     color: var(--success);
 }
 
+.price-item.free {
+    color: var(--accent-blue-light);
+}
+
 /* Status Badges */
 .status-badge {
     font-size: 0.7rem;

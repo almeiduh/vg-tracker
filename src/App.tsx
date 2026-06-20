@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { Gamepad2, CalendarClock, BarChart2, LogOut, User } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GameProvider } from './contexts/GameContext';
@@ -8,11 +8,49 @@ import { Statistics } from './components/statistics/Statistics';
 import { LoginPage } from './components/LoginPage';
 import { ProfilePage } from './components/profile/ProfilePage';
 import { getPlatforms } from './lib/rawg';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './index.css';
 
+function NavTabs() {
+  const location = useLocation();
+  const navRef = useRef<HTMLElement>(null);
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
+
+  useEffect(() => {
+    if (!navRef.current) return;
+    const activeTab = navRef.current.querySelector<HTMLElement>('.nav-tab.active');
+    if (activeTab) {
+      setIndicatorStyle({ left: activeTab.offsetLeft, width: activeTab.offsetWidth });
+    } else {
+      setIndicatorStyle({ left: 0, width: 0 });
+    }
+  }, [location.pathname]);
+
+  return (
+    <nav className="nav-tabs" ref={navRef}>
+      <div className="nav-indicator" style={{ left: indicatorStyle.left, width: indicatorStyle.width }} />
+      <NavLink to="/" className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`} end>
+        <Gamepad2 size={18} />
+        <span className="nav-label">Dashboard</span>
+      </NavLink>
+      <NavLink to="/timeline" className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}>
+        <CalendarClock size={18} />
+        <span className="nav-label">Timeline</span>
+      </NavLink>
+      <NavLink to="/statistics" className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}>
+        <BarChart2 size={18} />
+        <span className="nav-label">Statistics</span>
+      </NavLink>
+      <NavLink to="/profile" className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`} title="Account Settings">
+        <User size={18} />
+        <span className="nav-label">Profile</span>
+      </NavLink>
+    </nav>
+  );
+}
+
 function AppContent() {
-  const { session, isLoading, signOut, user } = useAuth();
+  const { session, isLoading, signOut } = useAuth();
 
   useEffect(() => {
     if (session) {
@@ -42,39 +80,8 @@ function AppContent() {
               <img src="/logo.png" alt="VG Tracker Logo" className="app-logo" />
               <span className="logo-text">VG Tracker</span>
             </div>
-            <nav className="nav-tabs">
-              <NavLink
-                to="/"
-                className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}
-                end
-              >
-                <Gamepad2 size={18} />
-                Dashboard
-              </NavLink>
-              <NavLink
-                to="/timeline"
-                className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}
-              >
-                <CalendarClock size={18} />
-                Timeline
-              </NavLink>
-              <NavLink
-                to="/statistics"
-                className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}
-              >
-                <BarChart2 size={18} />
-                Statistics
-              </NavLink>
-            </nav>
+            <NavTabs />
             <div className="header-actions">
-              <NavLink
-                to="/profile"
-                className={({ isActive }) => `user-profile-link ${isActive ? 'active' : ''}`}
-                title="Account Settings"
-              >
-                <User size={18} />
-                <span className="user-email" title={user?.email}>{user?.user_metadata?.full_name || user?.email}</span>
-              </NavLink>
               <button
                 className="logout-button"
                 id="logout-button"

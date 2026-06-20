@@ -1,0 +1,69 @@
+.pill-select-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pill-select-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.pill-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0.375rem;
+}
+
+.pill-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-light);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.pill-option:hover {
+    background: var(--bg-surface-hover);
+    color: var(--text-primary);
+    border-color: var(--text-muted);
+}
+
+.pill-option:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+.pill-option.pill-selected {
+    background: var(--pill-color, linear-gradient(135deg, var(--accent-blue-light), var(--accent-blue)));
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 2px 8px var(--pill-color, rgba(59, 130, 246, 0.3));
+}
+
+.pill-option.pill-selected:hover {
+    box-shadow: 0 4px 12px var(--pill-color, rgba(59, 130, 246, 0.5));
+}
+
+@media (max-width: 640px) {
+    .pill-select-options {
+        gap: 0.375rem;
+    }
+
+    .pill-option {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+}

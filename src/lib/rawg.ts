@@ -7,6 +7,12 @@ export interface RawgGameResult {
     genres: { id: number; name: string }[];
     platforms: { platform: { name: string } }[];
     playtime: number;
+    released: string | null;
+    rating: number | null;
+    metacritic: number | null;
+    developers: { name: string }[];
+    publishers: { name: string }[];
+    description_raw: string | null;
 }
 
 export interface RawgSearchResponse {
