@@ -4,7 +4,7 @@ import { useGameStats } from '../../hooks/useGameStats';
 import type { TimeRange } from '../../hooks/useGameStats';
 import { getPlatformConfig } from '../../lib/platforms';
 import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend, BarChart, Bar
 } from 'recharts';
 import './Statistics.css';
@@ -83,65 +83,69 @@ export function Statistics() {
             </div>
 
             <div className="stats-grid">
-                {/* KPI Cards */}
+                {/* Game KPIs */}
                 <div className="kpi-card glass-panel">
-                    <h3>Money Spent</h3>
-                    <div className="kpi-value">{formatCurrency(stats.totalSpent)}</div>
+                    <h3>Total Games</h3>
+                    <div className="kpi-value">{stats.totalGames}</div>
                 </div>
                 <div className="kpi-card glass-panel">
-                    <h3>Money from Sells</h3>
-                    <div className="kpi-value kpi-green">{formatCurrency(stats.totalSold)}</div>
+                    <h3>Total Hours Played</h3>
+                    <div className="kpi-value">{stats.totalHours}</div>
                 </div>
                 <div className="kpi-card glass-panel">
-                    <h3>Liquid Spent</h3>
-                    <div className="kpi-value kpi-purple">{formatCurrency(stats.liquidSpent)}</div>
+                    <h3>Average Rating</h3>
+                    <div className="kpi-value kpi-purple">{stats.avgRating}</div>
                 </div>
                 <div className="kpi-card glass-panel">
-                    <h3>Cost per Hour</h3>
-                    <div className="kpi-value kpi-orange">{formatCurrency(stats.costPerHour)}</div>
+                    <h3>Completion Rate</h3>
+                    <div className="kpi-value kpi-green">{stats.completionRate}%</div>
                 </div>
 
-                {/* Hours Played Area Chart */}
-                <div className="chart-card glass-panel col-span-2 row-span-2">
-                    <h3>Hours Played</h3>
+                {/* Hours Per Game */}
+                <div className="chart-card glass-panel col-span-2">
+                    <h3>Hours Per Game</h3>
                     <div className="chart-wrapper chart-tall">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats.hoursPlayedTimeline} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <XAxis dataKey="date" stroke="#9ca3af" />
-                                <YAxis stroke="#9ca3af" />
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
-                                <Area type="monotone" dataKey="hours" stroke="#06b6d4" fillOpacity={1} fill="url(#colorHours)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Genre Distribution Bar Chart */}
-                <div className="chart-card glass-panel row-span-2">
-                    <h3>Genre Distribution</h3>
-                    <div className="chart-wrapper chart-tall">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.genreDistribution} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
+                            <BarChart data={stats.hoursPerGame} layout="vertical" margin={{ top: 20, right: 30, left: 100, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
-                                <XAxis type="number" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} allowDecimals={false} />
-                                <YAxis dataKey="name" type="category" stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                                <XAxis type="number" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
+                                <YAxis dataKey="name" type="category" stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 10 }} width={140} />
                                 <Tooltip
                                     cursor={{ fill: '#374151', opacity: 0.4 }}
                                     contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
                                 />
                                 <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                                    {stats.genreDistribution.map((_, index) => (
+                                    {stats.hoursPerGame.map((_, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Bar>
                             </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Genre Distribution Pie Chart */}
+                <div className="chart-card glass-panel">
+                    <h3>Genre Distribution</h3>
+                    <div className="chart-wrapper chart-tall">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={stats.genreDistribution}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={50}
+                                    outerRadius={70}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {stats.genreDistribution.map((_, index) => (
+                                        <Cell key={`genre-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
+                                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                            </PieChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
@@ -312,22 +316,22 @@ export function Statistics() {
                     </div>
                 </div>
 
-                {/* Top 5 Most Played Games */}
+                {/* Top Played Platforms by Hours */}
                 <div className="chart-card glass-panel">
-                    <h3>Top 5 Most Played Games (Hours)</h3>
+                    <h3>Top Played Platforms (Hours)</h3>
                     <div className="chart-wrapper chart-tall">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.topGamesByPlaytime} layout="vertical" margin={{ top: 20, right: 30, left: 60, bottom: 5 }}>
+                            <BarChart data={stats.hoursByPlatform} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
                                 <XAxis type="number" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
-                                <YAxis dataKey="name" type="category" stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 10 }} width={120} />
+                                <YAxis dataKey="name" type="category" stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 12 }} />
                                 <Tooltip
                                     cursor={{ fill: '#374151', opacity: 0.4 }}
                                     contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
                                 />
-                                <Bar dataKey="value" fill="#ec4899" radius={[0, 4, 4, 0]}>
-                                    {stats.topGamesByPlaytime.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                                    {stats.hoursByPlatform.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={getPlatformConfig(entry.name).color} />
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -358,7 +362,23 @@ export function Statistics() {
                     </div>
                 </div>
 
-
+                {/* Money KPIs */}
+                <div className="kpi-card glass-panel">
+                    <h3>Money Spent</h3>
+                    <div className="kpi-value">{formatCurrency(stats.totalSpent)}</div>
+                </div>
+                <div className="kpi-card glass-panel">
+                    <h3>Money from Sells</h3>
+                    <div className="kpi-value kpi-green">{formatCurrency(stats.totalSold)}</div>
+                </div>
+                <div className="kpi-card glass-panel">
+                    <h3>Liquid Spent</h3>
+                    <div className="kpi-value kpi-purple">{formatCurrency(stats.liquidSpent)}</div>
+                </div>
+                <div className="kpi-card glass-panel">
+                    <h3>Cost per Hour</h3>
+                    <div className="kpi-value">{stats.costPerHour > 0 ? formatCurrency(stats.costPerHour) : '—'}</div>
+                </div>
 
             </div>
         </div>

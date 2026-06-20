@@ -30,24 +30,7 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
         const totalSold = filteredGames.reduce((acc, game) => acc + (game.selling_price || 0), 0);
         const liquidSpent = totalSpent - totalSold;
 
-        // 3. Hours Played Timeline (Group by Date)
-        // For simplicity, we'll plot games finished/started on those dates, or just sum their hours.
-        // A more precise timeline would need daily logs, but we only have start_date/end_date.
-        // Let's create a timeline of hours played based on end_date (when they finished it).
-        const hoursByDateMap = new Map<string, number>();
-        filteredGames.forEach(game => {
-            if (game.end_date && game.hours_played) {
-                const dateKey = game.end_date.split('T')[0]; // YYYY-MM-DD
-                hoursByDateMap.set(dateKey, (hoursByDateMap.get(dateKey) || 0) + game.hours_played);
-            }
-        });
-
-        // Sort timeline data
-        const hoursPlayedTimeline = Array.from(hoursByDateMap.entries())
-            .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
-            .map(([date, hours]) => ({ date, hours }));
-
-        // 4. Genre Distribution
+        // 3. Genre Distribution
         const genreCountMap = new Map<string, number>();
         filteredGames.forEach(game => {
             if (game.genres && Array.isArray(game.genres)) {
@@ -68,6 +51,17 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
             }
         });
         const platformBreakdown = Array.from(platformMap.entries())
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value);
+
+        // 5b. Hours Played by Platform
+        const hoursByPlatformMap = new Map<string, number>();
+        filteredGames.forEach(game => {
+            if (game.platform && game.hours_played) {
+                hoursByPlatformMap.set(game.platform, (hoursByPlatformMap.get(game.platform) || 0) + game.hours_played);
+            }
+        });
+        const hoursByPlatform = Array.from(hoursByPlatformMap.entries())
             .map(([name, value]) => ({ name, value }))
             .sort((a, b) => b.value - a.value);
 
@@ -174,11 +168,11 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
             .map(([name, data]) => ({ name, value: Math.round((data.totalHours / data.count) * 10) / 10 }))
             .sort((a, b) => b.value - a.value);
 
-        // 12. Top 5 Most Played Games
-        const topGamesByPlaytime = [...filteredGames]
+        // 12. Top Most Played Games (hours per game)
+        const hoursPerGame = [...filteredGames]
             .filter(g => g.hours_played && g.hours_played > 0)
             .sort((a, b) => (b.hours_played || 0) - (a.hours_played || 0))
-            .slice(0, 5)
+            .slice(0, 15)
             .map(game => ({
                 name: game.title,
                 value: game.hours_played,
@@ -200,41 +194,36 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
             .map(([name, data]) => ({ name, value: Math.round((data.totalRating / data.count) * 10) / 10 }))
             .sort((a, b) => b.value - a.value);
 
-        // 14. Spending Over Time
-        const spendingByMonthMap = new Map<string, number>();
-        filteredGames.forEach(game => {
-            if (game.purchasing_price && game.purchasing_price > 0 && game.created_at) {
-                // Group by YYYY-MM
-                const d = new Date(game.created_at);
-                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                spendingByMonthMap.set(monthKey, (spendingByMonthMap.get(monthKey) || 0) + game.purchasing_price);
-            }
-        });
-        const spendingOverTime = Array.from(spendingByMonthMap.entries())
-            .sort(([monthA], [monthB]) => monthA.localeCompare(monthB))
-            .map(([month, amount]) => {
-                const [year, m] = month.split('-');
-                const monthName = new Date(parseInt(year), parseInt(m) - 1).toLocaleString('default', { month: 'short' });
-                return { month: `${monthName} ${year}`, amount };
-            });
+        // 14. Top-Level KPIs
+        const totalGames = filteredGames.length;
+        const totalHours = filteredGames.reduce((acc, g) => acc + (g.hours_played || 0), 0);
+        const ratedGames = filteredGames.filter(g => g.rating !== null && g.rating !== undefined);
+        const avgRating = ratedGames.length > 0
+            ? Math.round((ratedGames.reduce((acc, g) => acc + g.rating!, 0) / ratedGames.length) * 10) / 10
+            : 0;
+        const playedGames = filteredGames.filter(g => g.status === 'Played').length;
+        const completionRate = totalGames > 0 ? Math.round((playedGames / totalGames) * 100) : 0;
 
         return {
+            totalGames,
+            totalHours,
+            avgRating,
+            completionRate,
             totalSpent,
             totalSold,
             liquidSpent,
-            hoursPlayedTimeline,
+            costPerHour,
             genreDistribution,
             platformBreakdown,
+            hoursByPlatform,
             timeToFinish,
             ratingDistribution,
             daysPlayedDistribution,
             statusDistribution,
             formatDistribution,
-            costPerHour,
             avgPlaytimeByGenre,
-            topGamesByPlaytime,
+            hoursPerGame,
             avgRatingByPlatform,
-            spendingOverTime
         };
     }, [games, timeRange]);
 }
