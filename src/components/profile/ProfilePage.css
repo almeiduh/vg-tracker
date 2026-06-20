@@ -11,15 +11,15 @@
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 1rem;
-    background: linear-gradient(135deg, var(--text-color), #888);
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-magenta));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .profile-section {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     padding: 2rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -45,7 +45,7 @@
 }
 
 .danger-zone h2 {
-    color: var(--danger-color);
+    color: var(--danger);
 }
 
 .danger-zone p {
@@ -60,14 +60,14 @@
 }
 
 .profile-message.success {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    background: rgba(0, 212, 81, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(0, 212, 81, 0.2);
 }
 
 .profile-message.error {
     background: rgba(220, 38, 38, 0.1);
-    color: var(--danger-color);
+    color: var(--danger);
     border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
@@ -78,5 +78,5 @@
 }
 
 .danger-text {
-    color: var(--danger-color);
+    color: var(--danger);
 }

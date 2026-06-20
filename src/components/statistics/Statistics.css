@@ -18,17 +18,17 @@
     display: block;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #9ca3af;
+    color: var(--text-secondary);
     margin-bottom: 0.25rem;
 }
 
 .filter-group select {
     width: 12rem;
-    background-color: #1f2937;
-    border: 1px solid #374151;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
     border-radius: 8px;
     padding: 0.5rem 0.75rem;
-    color: #f9fafb;
+    color: var(--text-primary);
     font-size: 0.875rem;
     outline: none;
     cursor: pointer;
@@ -36,8 +36,8 @@
 }
 
 .filter-group select:focus {
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(222, 67, 100, 0.25);
 }
 
 .filter-group-row {
@@ -52,11 +52,11 @@
 }
 
 .date-input {
-    background-color: #1f2937;
-    border: 1px solid #374151;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
     border-radius: 8px;
     padding: 0.5rem 0.75rem;
-    color: #f9fafb;
+    color: var(--text-primary);
     font-size: 0.875rem;
     outline: none;
     transition: border-color 0.2s;
@@ -64,8 +64,8 @@
 }
 
 .date-input:focus {
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(222, 67, 100, 0.25);
 }
 
 .date-input::-webkit-calendar-picker-indicator {
@@ -87,7 +87,7 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, transparent, #374151 20%, #374151 80%, transparent);
+    background: linear-gradient(90deg, transparent, var(--border-light) 20%, var(--border-light) 80%, transparent);
 }
 
 .section-divider span {
@@ -95,7 +95,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #6b7280;
+    color: var(--text-muted);
     white-space: nowrap;
 }
 
@@ -145,7 +145,7 @@
 }
 
 .kpi-card h3 {
-    color: #9ca3af;
+    color: var(--text-secondary);
     font-size: 0.875rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -173,7 +173,7 @@
 }
 
 .chart-card h3 {
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 1.125rem;
     font-weight: 600;
     margin-bottom: 1rem;
@@ -259,36 +259,36 @@
 }
 
 .legend-label {
-    color: #d1d5db;
+    color: var(--text-secondary);
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .legend-value {
-    color: #6b7280;
+    color: var(--text-muted);
     margin-left: auto;
     flex-shrink: 0;
 }
 
 /* Recharts tooltip overrides for dark mode */
 .recharts-default-tooltip {
-    background-color: #1f2937 !important;
+    background-color: var(--bg-surface) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 8px !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
 }
 
 .recharts-tooltip-item-name {
-    color: #d1d5db !important;
+    color: var(--text-secondary) !important;
 }
 
 .recharts-tooltip-item-value {
-    color: #f9fafb !important;
+    color: var(--text-primary) !important;
     font-weight: 600;
 }
 
 .recharts-legend-item-text {
-    color: #d1d5db !important;
+    color: var(--text-secondary) !important;
 }
 
 /* Activity Timeline */
@@ -306,7 +306,7 @@
 }
 
 .timeline-header h3 {
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 1.125rem;
     font-weight: 600;
     margin: 0;
@@ -318,7 +318,7 @@
     align-items: center;
     gap: 0.375rem;
     font-size: 0.7rem;
-    color: #6b7280;
+    color: var(--text-muted);
     flex-shrink: 0;
 }
 
@@ -331,12 +331,12 @@
     width: 12px;
     height: 12px;
     border-radius: 2px;
-    background-color: #8b5cf6;
+    background-color: var(--accent-blue);
 }
 
 .scale-cell:first-child {
-    background-color: rgba(30, 41, 59, 0.5);
-    border: 1px solid #374151;
+    background-color: rgba(18, 16, 25, 0.5);
+    border: 1px solid var(--border-light);
 }
 
 .timeline-months {
@@ -355,26 +355,26 @@
     min-width: 82px;
     padding: 8px 6px;
     border-radius: 8px;
-    background: rgba(30, 41, 59, 0.5);
+    background: rgba(18, 16, 25, 0.5);
     cursor: pointer;
     position: relative;
     transition: background 0.15s ease;
 }
 
 .timeline-month:hover {
-    background: rgba(30, 41, 59, 0.8);
+    background: rgba(28, 26, 46, 0.8);
 }
 
 .timeline-month-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #d1d5db;
+    color: var(--text-secondary);
     line-height: 1;
 }
 
 .timeline-month-year {
     font-size: 0.65rem;
-    color: #6b7280;
+    color: var(--text-muted);
     line-height: 1;
 }
 
@@ -391,12 +391,12 @@
 .timeline-month-count {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #f9fafb;
+    color: var(--text-primary);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .timeline-empty {
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 0.875rem;
     text-align: center;
     padding: 2rem 0;
@@ -405,7 +405,7 @@
 
 /* Tooltip */
 .timeline-tooltip {
-    background: #1f2937;
+    background: var(--bg-surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     padding: 0.75rem;
@@ -419,16 +419,16 @@
 
 .timeline-tooltip > strong {
     display: block;
-    color: #f9fafb;
+    color: var(--text-primary);
     font-size: 0.875rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
     padding-bottom: 0.375rem;
-    border-bottom: 1px solid #374151;
+    border-bottom: 1px solid var(--border-light);
 }
 
 .timeline-tooltip-empty {
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 0.75rem;
     margin: 0;
 }
@@ -451,11 +451,11 @@
 }
 
 .timeline-tooltip-label--started {
-    color: #22c55e;
+    color: var(--success);
 }
 
 .timeline-tooltip-label--finished {
-    color: #f87171;
+    color: var(--accent-magenta);
 }
 
 .timeline-tooltip-game {
@@ -464,7 +464,7 @@
     gap: 0.5rem;
     padding: 0.25rem 0;
     font-size: 0.75rem;
-    color: #d1d5db;
+    color: var(--text-secondary);
     line-height: 1.2;
 }
 
@@ -475,7 +475,7 @@
 }
 
 .timeline-tooltip-game-title {
-    color: #f9fafb;
+    color: var(--text-primary);
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -483,7 +483,7 @@
 }
 
 .timeline-tooltip-game-meta {
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 0.65rem;
 }
 

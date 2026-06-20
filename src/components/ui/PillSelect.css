@@ -50,11 +50,11 @@
     background: var(--pill-color, linear-gradient(135deg, var(--accent-blue-light), var(--accent-blue)));
     color: white;
     border-color: transparent;
-    box-shadow: 0 2px 8px var(--pill-color, rgba(59, 130, 246, 0.3));
+    box-shadow: 0 2px 8px var(--pill-color, rgba(222, 67, 100, 0.3));
 }
 
 .pill-option.pill-selected:hover {
-    box-shadow: 0 4px 12px var(--pill-color, rgba(59, 130, 246, 0.5));
+    box-shadow: 0 4px 12px var(--pill-color, rgba(222, 67, 100, 0.5));
 }
 
 @media (max-width: 640px) {

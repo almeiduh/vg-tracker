@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import './Statistics.css';
 
-const COLORS = ['#8b5cf6', '#06b6d4', '#4ade80', '#eab308', '#f87171', '#ec4899', '#6366f1'];
+const COLORS = ['#de4364', '#00b0f4', '#00d451', '#eaea22', '#de4364', '#7c5cbf', '#e86a85'];
 
 // Red (1) → Orange (4) → Yellow (7) → Green (10)
 const RATING_COLORS: Record<string, string> = {
@@ -174,7 +174,7 @@ export function Statistics() {
                                     className="timeline-month-bar"
                                     style={{
                                         backgroundColor: month.totalActions > 0
-                                            ? `rgba(139, 92, 246, ${0.15 + (month.totalActions / stats.timelineMaxActions) * 0.85})`
+                                            ? `rgba(222, 67, 100, ${0.15 + (month.totalActions / stats.timelineMaxActions) * 0.85})`
                                             : 'transparent',
                                     }}
                                 >

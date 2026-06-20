@@ -43,7 +43,7 @@
 .genre-select-trigger:focus,
 .genre-select-trigger.open {
     border-color: var(--accent-blue-light);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 2px rgba(222, 67, 100, 0.2);
 }
 
 .genre-select-placeholder {
@@ -59,8 +59,8 @@
     font-size: 0.8rem;
     font-weight: 500;
     color: var(--accent-blue-light);
-    background: rgba(59, 130, 246, 0.15);
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: rgba(222, 67, 100, 0.12);
+    border: 1px solid rgba(222, 67, 100, 0.3);
     border-radius: var(--radius-full);
     line-height: 1.4;
     white-space: nowrap;

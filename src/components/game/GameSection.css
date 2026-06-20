@@ -80,6 +80,6 @@
     text-align: center;
     color: var(--text-muted);
     font-style: italic;
-    background-color: rgba(30, 41, 59, 0.3);
+    background-color: rgba(10, 8, 14, 0.3);
     border: 1px dashed var(--border-light);
 }
