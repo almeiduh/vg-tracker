@@ -62,7 +62,10 @@ export const Dashboard = () => {
     return (
         <div className="dashboard-container" style={{ padding: '0 2rem 2rem', margin: '0 auto', maxWidth: '1440px' }}>
             <div className="dashboard-header">
-                <h1 style={{ margin: 0, fontSize: '2rem' }}>Dashboard</h1>
+                <h1 style={{ margin: 0, fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    Dashboard
+                    <span className="game-section-count">{games.length} Games</span>
+                </h1>
                 <div className="dashboard-actions">
                     <Button
                         onClick={() => handleOpenModal()}

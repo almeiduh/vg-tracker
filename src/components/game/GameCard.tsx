@@ -2,6 +2,7 @@ import React from 'react';
 import { Edit2, Trash2, Clock, Calendar, Star, Gamepad2, Disc, Cloud, HardDrive, ShoppingCart, TrendingUp } from 'lucide-react';
 import type { Game } from '../../types/game';
 import { getPlatformConfig } from '../../lib/platforms';
+import { formatDate } from '../../lib/formatDate';
 
 import './GameCard.css';
 
@@ -17,15 +18,6 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
         if (window.confirm(`Are you sure you want to delete "${game.title}"?`)) {
             onDelete(game.id);
         }
-    };
-
-    const formatDate = (dateString: string | null) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
     };
 
     const isPlayingOrOnHold = game.status === 'Playing' || game.status === 'On Hold';

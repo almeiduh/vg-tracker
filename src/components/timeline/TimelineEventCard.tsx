@@ -2,6 +2,7 @@ import React from 'react';
 import { Edit2, Trash2, Calendar, Clock, Gamepad2, Star } from 'lucide-react';
 import type { Game } from '../../types/game';
 import { getPlatformConfig } from '../../lib/platforms';
+import { formatDate } from '../../lib/formatDate';
 
 export interface TimelineEvent {
     type: 'started' | 'finished';
@@ -22,14 +23,6 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onE
         if (window.confirm(`Are you sure you want to delete "${game.title}"?`)) {
             onDelete(game.id);
         }
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'numeric',
-            day: 'numeric'
-        });
     };
 
     const platformConfig = getPlatformConfig(game.platform);

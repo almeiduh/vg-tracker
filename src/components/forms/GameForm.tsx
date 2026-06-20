@@ -43,7 +43,7 @@ export const GameForm: React.FC<GameFormProps> = ({ initialData, onSubmit, onCan
         status: 'Backlog' as GameStatus,
         purchasing_price: '0',
         selling_price: '0',
-        start_date: new Date().toISOString().split('T')[0],
+        start_date: '',
         end_date: '',
         hours_played: '',
         cover_url: '' as string | null,

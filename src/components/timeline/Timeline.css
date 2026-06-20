@@ -12,6 +12,18 @@
     margin-bottom: 2rem;
 }
 
+/* Vertical connector line behind the dots */
+.timeline-track::before {
+    content: '';
+    position: absolute;
+    left: calc(2.5rem - 2.175rem + 6px);
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent 0, var(--border-light) 1.5rem, var(--border-light) calc(100% - 1.5rem), transparent 100%);
+    z-index: 1;
+}
+
 /* Dot marker — bullseye style, color set by event type */
 .timeline-event::before {
     content: '';

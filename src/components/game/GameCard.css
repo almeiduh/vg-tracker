@@ -201,6 +201,12 @@
     border-radius: var(--radius-sm);
 }
 
+@media (max-width: 480px) {
+    .game-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .stat-item {
     display: flex;
     align-items: center;

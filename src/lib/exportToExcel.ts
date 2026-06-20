@@ -1,12 +1,6 @@
 import * as XLSX from 'xlsx';
 import type { Game } from '../types/game';
-
-function formatDate(dateStr: string | null): string {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
+import { formatDate } from './formatDate';
 
 function formatNumber(value: number | null): number | string {
     return value !== null ? value : '';
