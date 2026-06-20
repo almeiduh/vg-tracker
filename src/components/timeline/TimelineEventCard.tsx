@@ -82,7 +82,7 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onE
                                 backgroundColor: `${platformConfig.color}15`
                             }}
                         >
-                            <PlatformIcon size={14} />
+                            <PlatformIcon size={20} />
                             {game.platform}
                         </span>
 

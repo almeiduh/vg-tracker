@@ -81,7 +81,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, show
                             backgroundColor: `${platformConfig.color}33`
                         }}
                     >
-                        <PlatformIcon size={14} />
+                        <PlatformIcon size={20} />
                     </span>
                     <span className="info-tag format-tag" title={game.format}>
                         {game.format === 'Cloud' && <Cloud size={14} />}

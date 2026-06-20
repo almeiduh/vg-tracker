@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useGames } from '../../contexts/GameContext';
 import { useGameStats } from '../../hooks/useGameStats';
-import type { TimeRange } from '../../hooks/useGameStats';
+import type { TimeRange, TimelineMonth } from '../../hooks/useGameStats';
 import { getPlatformConfig } from '../../lib/platforms';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -27,8 +27,10 @@ const RATING_COLORS: Record<string, string> = {
 
 export function Statistics() {
     const { games } = useGames();
-    const [timeRange, setTimeRange] = useState<TimeRange>('all');
-    const stats = useGameStats(games, timeRange);
+    const [timeRange, setTimeRange] = useState<TimeRange>('thisYear');
+    const [customStart, setCustomStart] = useState('');
+    const [customEnd, setCustomEnd] = useState('');
+    const stats = useGameStats(games, timeRange, customStart || undefined, customEnd || undefined);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
@@ -65,6 +67,38 @@ export function Statistics() {
 
     const platformColors = getPlatformChartColors();
 
+    const [tooltipMonth, setTooltipMonth] = useState<TimelineMonth | null>(null);
+    const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+
+    const handleMonthClick = useCallback((month: TimelineMonth, e: React.MouseEvent) => {
+        if (tooltipMonth?.monthKey === month.monthKey) {
+            setTooltipMonth(null);
+            return;
+        }
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const halfWidth = 140;
+        const clampedX = Math.max(halfWidth, Math.min(centerX, window.innerWidth - halfWidth));
+        setTooltipPos({ x: clampedX, y: rect.bottom + 8 });
+        setTooltipMonth(month);
+    }, [tooltipMonth]);
+
+    const handleTooltipClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+    }, []);
+
+    useEffect(() => {
+        if (!tooltipMonth) return;
+        const handleOutsideClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('.timeline-tooltip') && !target.closest('.timeline-month')) {
+                setTooltipMonth(null);
+            }
+        };
+        document.addEventListener('click', handleOutsideClick);
+        return () => document.removeEventListener('click', handleOutsideClick);
+    }, [tooltipMonth]);
+
     return (
         <div className="statistics-container">
             <div className="stats-header glass-panel">
@@ -75,15 +109,146 @@ export function Statistics() {
                         value={timeRange}
                         onChange={(e) => setTimeRange(e.target.value as TimeRange)}
                     >
-                        <option value="30days">Last 30 Days</option>
-                        <option value="1year">This Year</option>
                         <option value="all">All Time</option>
+                        <option value="thisYear">This Year</option>
+                        <option value="lastYear">Last Year</option>
+                        <option value="thisMonth">This Month</option>
+                        <option value="lastMonth">Last Month</option>
+                        <option value="30days">Last 30 Days</option>
+                        <option value="1year">Last 365 Days</option>
+                        <option value="custom">Custom Range</option>
                     </select>
                 </div>
+                {timeRange === 'custom' && (
+                    <div className="filter-group filter-group-row">
+                        <div className="date-input-group">
+                            <label htmlFor="customStart">From</label>
+                            <input
+                                id="customStart"
+                                type="month"
+                                value={customStart}
+                                onChange={(e) => setCustomStart(e.target.value)}
+                                className="date-input"
+                            />
+                        </div>
+                        <div className="date-input-group">
+                            <label htmlFor="customEnd">To</label>
+                            <input
+                                id="customEnd"
+                                type="month"
+                                value={customEnd}
+                                onChange={(e) => setCustomEnd(e.target.value)}
+                                className="date-input"
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
 
+            <div className="timeline-section glass-panel">
+                <div className="timeline-header">
+                    <h3>Activity Timeline</h3>
+                    <div className="timeline-scale">
+                        <span>Less</span>
+                        <div className="timeline-scale-cells">
+                            <div className="scale-cell" />
+                            <div className="scale-cell" style={{ opacity: 0.3 }} />
+                            <div className="scale-cell" style={{ opacity: 0.55 }} />
+                            <div className="scale-cell" style={{ opacity: 0.75 }} />
+                            <div className="scale-cell" style={{ opacity: 1 }} />
+                        </div>
+                        <span>More</span>
+                    </div>
+                </div>
+                {stats.activityTimeline.length > 0 ? (
+                    <div className="timeline-months">
+                        {stats.activityTimeline.map(month => (
+                            <div
+                                key={month.monthKey}
+                                className="timeline-month"
+                                onClick={(e) => handleMonthClick(month, e)}
+                            >
+                                <span className="timeline-month-label">{month.label.split(' ')[0]}</span>
+                                <span className="timeline-month-year">{month.label.split(' ')[1]}</span>
+                                <div
+                                    className="timeline-month-bar"
+                                    style={{
+                                        backgroundColor: month.totalActions > 0
+                                            ? `rgba(139, 92, 246, ${0.15 + (month.totalActions / stats.timelineMaxActions) * 0.85})`
+                                            : 'transparent',
+                                    }}
+                                >
+                                    {month.totalActions > 0 && (
+                                        <span className="timeline-month-count">{month.totalActions}</span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="timeline-empty">No activity in this time range</p>
+                )}
+            </div>
+
+            {tooltipMonth && (
+                <div
+                    className="timeline-tooltip"
+                    onClick={handleTooltipClick}
+                    style={{
+                        position: 'fixed',
+                        left: tooltipPos.x,
+                        top: tooltipPos.y,
+                        transform: 'translate(-50%, 0)',
+                    }}
+                >
+                    <strong>{tooltipMonth.label}</strong>
+                    {tooltipMonth.totalActions === 0 ? (
+                        <p className="timeline-tooltip-empty">No activity</p>
+                    ) : (
+                        <>
+                            {tooltipMonth.gamesStarted.length > 0 && (
+                                                <div className="timeline-tooltip-group">
+                                                    <span className="timeline-tooltip-label timeline-tooltip-label--started">Started</span>
+                                    {tooltipMonth.gamesStarted.map((game, i) => (
+                                        <div key={i} className="timeline-tooltip-game">
+                                            {game.coverUrl && (
+                                                <img className="timeline-tooltip-cover" src={game.coverUrl} alt="" />
+                                            )}
+                                            <div className="timeline-tooltip-game-info">
+                                                <span className="timeline-tooltip-game-title">{game.title}</span>
+                                                <span className="timeline-tooltip-game-meta">{game.platform}{game.hoursPlayed !== null ? ` · ${game.hoursPlayed}h` : ''}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {tooltipMonth.gamesFinished.length > 0 && (
+                                                <div className="timeline-tooltip-group">
+                                                    <span className="timeline-tooltip-label timeline-tooltip-label--finished">Finished</span>
+                                    {tooltipMonth.gamesFinished.map((game, i) => (
+                                        <div key={i} className="timeline-tooltip-game">
+                                            {game.coverUrl && (
+                                                <img className="timeline-tooltip-cover" src={game.coverUrl} alt="" />
+                                            )}
+                                            <div className="timeline-tooltip-game-info">
+                                                <span className="timeline-tooltip-game-title">{game.title}</span>
+                                                <span className="timeline-tooltip-game-meta">{game.platform}{game.hoursPlayed !== null ? ` · ${game.hoursPlayed}h` : ''}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            )}
+
             <div className="stats-grid">
-                {/* Game KPIs */}
+
+                <div className="section-divider">
+                    <span>Overview</span>
+                </div>
+
                 <div className="kpi-card glass-panel">
                     <h3>Total Games</h3>
                     <div className="kpi-value">{stats.totalGames}</div>
@@ -101,30 +266,44 @@ export function Statistics() {
                     <div className="kpi-value kpi-green">{stats.completionRate}%</div>
                 </div>
 
-                {/* Hours Per Game */}
-                <div className="chart-card glass-panel col-span-2">
-                    <h3>Hours Per Game</h3>
-                    <div className="chart-wrapper chart-tall">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.hoursPerGame} layout="vertical" margin={{ top: 20, right: 30, left: 100, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
-                                <XAxis type="number" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
-                                <YAxis dataKey="name" type="category" stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 10 }} width={140} />
-                                <Tooltip
-                                    cursor={{ fill: '#374151', opacity: 0.4 }}
-                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
-                                />
-                                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                                    {stats.hoursPerGame.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                <div className="chart-card glass-panel col-span-4">
+                    <h3>Top 10 Most Played Games</h3>
+                    <div className="chart-with-legend">
+                        <div className="chart-wrapper chart-tall">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={stats.hoursPerGame} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                    <XAxis dataKey="name" tickFormatter={(_, index) => `${index + 1}`} interval={0} stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                                    <YAxis type="number" width={36} stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
+                                    <Tooltip
+                                        cursor={{ fill: '#374151', opacity: 0.4 }}
+                                        contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
+                                        labelFormatter={(_, payload) => payload[0]?.payload?.name ?? ''}
+                                    />
+                                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                                        {stats.hoursPerGame.map((_, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="chart-legend">
+                            {stats.hoursPerGame.map((entry, index) => (
+                                <div key={entry.name} className="legend-item">
+                                    <span className="legend-dot" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                                    <span className="legend-label">{entry.name}</span>
+                                    <span className="legend-value">{entry.value}h</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
-                {/* Genre Distribution Pie Chart */}
+                <div className="section-divider">
+                    <span>Distribution</span>
+                </div>
+
                 <div className="chart-card glass-panel">
                     <h3>Genre Distribution</h3>
                     <div className="chart-wrapper chart-tall">
@@ -150,9 +329,8 @@ export function Statistics() {
                     </div>
                 </div>
 
-                {/* Platform Breakdown */}
                 <div className="chart-card glass-panel">
-                    <h3>Platform Breakdown (Games)</h3>
+                    <h3>Platform Breakdown</h3>
                     <div className="chart-wrapper chart-tall">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -176,76 +354,6 @@ export function Statistics() {
                     </div>
                 </div>
 
-                {/* Time To Finish */}
-                <div className="chart-card glass-panel">
-                    <h3>Time to Finish Games</h3>
-                    <div className="chart-wrapper chart-tall">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.timeToFinish} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                <XAxis dataKey="range" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
-                                <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} allowDecimals={false} />
-                                <Tooltip
-                                    cursor={{ fill: '#374151', opacity: 0.4 }}
-                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
-                                />
-                                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                                    {stats.timeToFinish.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Rating Distribution */}
-                <div className="chart-card glass-panel">
-                    <h3>Rating Distribution (Stars)</h3>
-                    <div className="chart-wrapper chart-tall">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.ratingDistribution} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                <XAxis dataKey="rating" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
-                                <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} allowDecimals={false} />
-                                <Tooltip
-                                    cursor={{ fill: '#374151', opacity: 0.4 }}
-                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
-                                />
-                                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                                    {stats.ratingDistribution.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={RATING_COLORS[entry.rating] || '#9ca3af'} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Days Played Distribution */}
-                <div className="chart-card glass-panel">
-                    <h3>Days Played Distribution</h3>
-                    <div className="chart-wrapper chart-tall">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.daysPlayedDistribution} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                <XAxis dataKey="range" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
-                                <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} allowDecimals={false} />
-                                <Tooltip
-                                    cursor={{ fill: '#374151', opacity: 0.4 }}
-                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
-                                />
-                                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                                    {stats.daysPlayedDistribution.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Status Distribution */}
                 <div className="chart-card glass-panel">
                     <h3>Status Distribution</h3>
                     <div className="chart-wrapper chart-tall">
@@ -271,7 +379,6 @@ export function Statistics() {
                     </div>
                 </div>
 
-                {/* Format Distribution */}
                 <div className="chart-card glass-panel">
                     <h3>Format Distribution</h3>
                     <div className="chart-wrapper chart-tall">
@@ -297,41 +404,25 @@ export function Statistics() {
                     </div>
                 </div>
 
-                {/* Average Playtime by Genre */}
-                <div className="chart-card glass-panel">
-                    <h3>Avg Playtime by Genre (Hours)</h3>
-                    <div className="chart-wrapper chart-tall">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.avgPlaytimeByGenre} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
-                                <XAxis type="number" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
-                                <YAxis dataKey="name" type="category" stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                                <Tooltip
-                                    cursor={{ fill: '#374151', opacity: 0.4 }}
-                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
-                                />
-                                <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+                <div className="section-divider">
+                    <span>Engagement</span>
                 </div>
 
-                {/* Top Played Platforms by Hours */}
                 <div className="chart-card glass-panel">
-                    <h3>Top Played Platforms (Hours)</h3>
+                    <h3>Time to Finish</h3>
                     <div className="chart-wrapper chart-tall">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.hoursByPlatform} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
-                                <XAxis type="number" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
-                                <YAxis dataKey="name" type="category" stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                            <BarChart data={stats.timeToFinish} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis dataKey="range" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
+                                <YAxis width={36} stroke="#9ca3af" tick={{ fill: '#9ca3af' }} allowDecimals={false} />
                                 <Tooltip
                                     cursor={{ fill: '#374151', opacity: 0.4 }}
                                     contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
                                 />
-                                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                                    {stats.hoursByPlatform.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={getPlatformConfig(entry.name).color} />
+                                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                    {stats.timeToFinish.map((_, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -339,15 +430,112 @@ export function Statistics() {
                     </div>
                 </div>
 
-                {/* Average Rating by Platform */}
                 <div className="chart-card glass-panel">
+                    <h3>Days to Finish</h3>
+                    <div className="chart-wrapper chart-tall">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={stats.daysPlayedDistribution} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis dataKey="range" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
+                                <YAxis width={36} stroke="#9ca3af" tick={{ fill: '#9ca3af' }} allowDecimals={false} />
+                                <Tooltip
+                                    cursor={{ fill: '#374151', opacity: 0.4 }}
+                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
+                                />
+                                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                    {stats.daysPlayedDistribution.map((_, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="chart-card glass-panel">
+                    <h3>Avg Playtime by Genre (Hours)</h3>
+                    <div className="chart-wrapper chart-tall">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={stats.avgPlaytimeByGenre}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={50}
+                                    outerRadius={70}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {stats.avgPlaytimeByGenre.map((_, index) => (
+                                        <Cell key={`avg-genre-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
+                                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="chart-card glass-panel">
+                    <h3>Top Played Platforms (Hours)</h3>
+                    <div className="chart-wrapper chart-tall">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={stats.hoursByPlatform}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={50}
+                                    outerRadius={70}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {stats.hoursByPlatform.map((entry, index) => (
+                                        <Cell key={`hours-platform-${index}`} fill={getPlatformConfig(entry.name).color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
+                                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="section-divider">
+                    <span>Ratings</span>
+                </div>
+
+                <div className="chart-card glass-panel col-span-2">
+                    <h3>Rating Distribution (Stars)</h3>
+                    <div className="chart-wrapper chart-tall">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={stats.ratingDistribution} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis dataKey="rating" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
+                                <YAxis width={36} stroke="#9ca3af" tick={{ fill: '#9ca3af' }} allowDecimals={false} />
+                                <Tooltip
+                                    cursor={{ fill: '#374151', opacity: 0.4 }}
+                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
+                                />
+                                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                    {stats.ratingDistribution.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={RATING_COLORS[entry.rating] || '#9ca3af'} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="chart-card glass-panel col-span-2">
                     <h3>Average Rating by Platform</h3>
                     <div className="chart-wrapper chart-tall">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.avgRatingByPlatform} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
+                            <BarChart data={stats.avgRatingByPlatform} layout="vertical" margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
                                 <XAxis type="number" domain={[0, 10]} stroke="#9ca3af" tick={{ fill: '#9ca3af' }} />
-                                <YAxis dataKey="name" type="category" stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                                <YAxis dataKey="name" type="category" width={80} stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 12 }} />
                                 <Tooltip
                                     cursor={{ fill: '#374151', opacity: 0.4 }}
                                     contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#f3f4f6' }}
@@ -362,22 +550,27 @@ export function Statistics() {
                     </div>
                 </div>
 
-                {/* Money KPIs */}
-                <div className="kpi-card glass-panel">
-                    <h3>Money Spent</h3>
-                    <div className="kpi-value">{formatCurrency(stats.totalSpent)}</div>
+                <div className="section-divider">
+                    <span>Monetary</span>
                 </div>
-                <div className="kpi-card glass-panel">
-                    <h3>Money from Sells</h3>
-                    <div className="kpi-value kpi-green">{formatCurrency(stats.totalSold)}</div>
-                </div>
-                <div className="kpi-card glass-panel">
-                    <h3>Liquid Spent</h3>
-                    <div className="kpi-value kpi-purple">{formatCurrency(stats.liquidSpent)}</div>
-                </div>
-                <div className="kpi-card glass-panel">
-                    <h3>Cost per Hour</h3>
-                    <div className="kpi-value">{stats.costPerHour > 0 ? formatCurrency(stats.costPerHour) : '—'}</div>
+
+                <div className="kpi-row">
+                    <div className="kpi-card glass-panel">
+                        <h3>Money Spent</h3>
+                        <div className="kpi-value">{formatCurrency(stats.totalSpent)}</div>
+                    </div>
+                    <div className="kpi-card glass-panel">
+                        <h3>Money from Sells</h3>
+                        <div className="kpi-value kpi-green">{formatCurrency(stats.totalSold)}</div>
+                    </div>
+                    <div className="kpi-card glass-panel">
+                        <h3>Liquid Spent</h3>
+                        <div className="kpi-value kpi-purple">{formatCurrency(stats.liquidSpent)}</div>
+                    </div>
+                    <div className="kpi-card glass-panel">
+                        <h3>Cost per Hour</h3>
+                        <div className="kpi-value">{stats.costPerHour > 0 ? formatCurrency(stats.costPerHour) : '—'}</div>
+                    </div>
                 </div>
 
             </div>

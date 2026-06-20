@@ -94,17 +94,17 @@ export const Dashboard = () => {
             />
 
             <GameSection
-                title="Wishlist"
-                icon={<Heart size={26} color="var(--accent-pink)" />}
-                games={wishlistGames}
+                title="Backlog"
+                icon={<ListTodo size={26} color="var(--warning-alt)" />}
+                games={backlogGames}
                 onEdit={handleOpenModal}
                 onDelete={deleteGame}
             />
 
             <GameSection
-                title="Backlog"
-                icon={<ListTodo size={26} color="var(--warning-alt)" />}
-                games={backlogGames}
+                title="Wishlist"
+                icon={<Heart size={26} color="var(--accent-pink)" />}
+                games={wishlistGames}
                 onEdit={handleOpenModal}
                 onDelete={deleteGame}
             />

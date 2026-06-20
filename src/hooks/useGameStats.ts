@@ -1,26 +1,99 @@
 import { useMemo } from 'react';
 import type { Game } from '../types/game';
 
-export type TimeRange = '30days' | '1year' | 'all';
+export type TimeRange = '30days' | '1year' | 'all' | 'thisYear' | 'lastYear' | 'thisMonth' | 'lastMonth' | 'custom';
 
-export function useGameStats(games: Game[], timeRange: TimeRange) {
+export function computeDateRange(timeRange: TimeRange, customStart?: string, customEnd?: string, now?: Date) {
+    const _now = now ?? new Date();
+    const currentYear = _now.getFullYear();
+    const currentMonth = _now.getMonth();
+
+    let rangeStart: Date | null | undefined;
+    let rangeEnd: Date | null | undefined;
+
+    switch (timeRange) {
+        case 'all':
+            rangeStart = undefined;
+            rangeEnd = undefined;
+            break;
+        case '30days':
+            rangeStart = new Date(_now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            rangeEnd = _now;
+            break;
+        case '1year':
+            rangeStart = new Date(_now.getTime() - 365 * 24 * 60 * 60 * 1000);
+            rangeEnd = _now;
+            break;
+        case 'thisYear':
+            rangeStart = new Date(currentYear, 0, 1);
+            rangeEnd = _now;
+            break;
+        case 'lastYear':
+            rangeStart = new Date(currentYear - 1, 0, 1);
+            rangeEnd = new Date(currentYear - 1, 11, 31, 23, 59, 59, 999);
+            break;
+        case 'thisMonth':
+            rangeStart = new Date(currentYear, currentMonth, 1);
+            rangeEnd = _now;
+            break;
+        case 'lastMonth':
+            rangeStart = new Date(currentYear, currentMonth - 1, 1);
+            rangeEnd = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
+            break;
+        case 'custom':
+            if (customStart) {
+                if (customStart.length === 7) {
+                    const [y, m] = customStart.split('-').map(Number);
+                    rangeStart = new Date(y, m - 1, 1);
+                } else {
+                    rangeStart = new Date(customStart);
+                }
+            }
+            if (customEnd) {
+                if (customEnd.length === 7) {
+                    const [y, m] = customEnd.split('-').map(Number);
+                    rangeEnd = new Date(y, m, 0, 23, 59, 59, 999);
+                } else {
+                    rangeEnd = new Date(customEnd);
+                }
+            }
+            break;
+    }
+
+    return { rangeStart, rangeEnd };
+}
+
+export interface TimelineGameInfo {
+    title: string;
+    coverUrl: string | null;
+    platform: string | null;
+    hoursPlayed: number | null;
+}
+
+export interface TimelineMonth {
+    monthKey: string;
+    label: string;
+    totalActions: number;
+    gamesStarted: Array<TimelineGameInfo>;
+    gamesFinished: Array<TimelineGameInfo>;
+}
+
+export function useGameStats(games: Game[], timeRange: TimeRange, customStart?: string, customEnd?: string) {
     return useMemo(() => {
         const now = new Date();
+        const { rangeStart, rangeEnd } = computeDateRange(timeRange, customStart, customEnd, now);
 
-        // 1. Filter games based on timeRange
-        // If a game doesn't have an end_date, we might use start_date or skip it for timeline stats.
+        // 2. Filter games based on date boundaries
         const filteredGames = games.filter(game => {
-            if (timeRange === 'all') return true;
+            if (rangeStart === undefined && rangeEnd === undefined) return true;
 
             const gameDateStr = game.end_date || game.start_date || game.created_at;
             if (!gameDateStr) return false;
 
             const gameDate = new Date(gameDateStr);
-            const diffTime = Math.abs(now.getTime() - gameDate.getTime());
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            if (timeRange === '30days') return diffDays <= 30;
-            if (timeRange === '1year') return diffDays <= 365;
+            if (rangeStart && gameDate < rangeStart) return false;
+            if (rangeEnd && gameDate > rangeEnd) return false;
 
             return true;
         });
@@ -113,7 +186,7 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
             if (game.status === 'Backlog' || game.status === 'Wishlist' || !game.start_date) return;
             const start = new Date(game.start_date);
             start.setHours(0, 0, 0, 0);
-            const end = game.end_date ? new Date(game.end_date) : now; // now is defined at the top
+            const end = game.end_date ? new Date(game.end_date) : now;
             end.setHours(0, 0, 0, 0);
             const daysPlayed = Math.max(0, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
 
@@ -172,7 +245,7 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
         const hoursPerGame = [...filteredGames]
             .filter(g => g.hours_played && g.hours_played > 0)
             .sort((a, b) => (b.hours_played || 0) - (a.hours_played || 0))
-            .slice(0, 15)
+            .slice(0, 10)
             .map(game => ({
                 name: game.title,
                 value: game.hours_played,
@@ -204,6 +277,67 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
         const playedGames = filteredGames.filter(g => g.status === 'Played').length;
         const completionRate = totalGames > 0 ? Math.round((playedGames / totalGames) * 100) : 0;
 
+        // 15. Activity Timeline (GitHub-style contribution per month)
+        let displayStart = rangeStart;
+        let displayEnd = rangeEnd;
+
+        if (!displayStart || !displayEnd) {
+            const allDates = filteredGames
+                .flatMap(g => [g.start_date, g.end_date].filter(Boolean)) as string[];
+            if (allDates.length > 0) {
+                allDates.sort();
+                displayStart = new Date(allDates[0]);
+                displayEnd = new Date(allDates[allDates.length - 1]);
+            }
+        }
+
+        let activityTimeline: TimelineMonth[] = [];
+        let timelineMaxActions = 0;
+
+        if (displayStart && displayEnd) {
+            const start = new Date(displayStart.getFullYear(), displayStart.getMonth(), 1);
+            const end = new Date(displayEnd.getFullYear(), displayEnd.getMonth(), 1);
+
+            const monthMap = new Map<string, TimelineMonth>();
+            const cursor = new Date(start);
+            while (cursor <= end) {
+                const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
+                const label = cursor.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                monthMap.set(key, {
+                    monthKey: key,
+                    label,
+                    totalActions: 0,
+                    gamesStarted: [],
+                    gamesFinished: [],
+                });
+                cursor.setMonth(cursor.getMonth() + 1);
+            }
+
+            filteredGames.forEach(game => {
+                if (game.start_date) {
+                    const d = new Date(game.start_date);
+                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    const month = monthMap.get(key);
+                    if (month) {
+                        month.gamesStarted.push({ title: game.title, coverUrl: game.cover_url ?? null, platform: game.platform ?? null, hoursPlayed: game.hours_played ?? null });
+                        month.totalActions++;
+                    }
+                }
+                if (game.end_date) {
+                    const d = new Date(game.end_date);
+                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    const month = monthMap.get(key);
+                    if (month) {
+                        month.gamesFinished.push({ title: game.title, coverUrl: game.cover_url ?? null, platform: game.platform ?? null, hoursPlayed: game.hours_played ?? null });
+                        month.totalActions++;
+                    }
+                }
+            });
+
+            activityTimeline = Array.from(monthMap.values());
+            timelineMaxActions = Math.max(1, ...activityTimeline.map(m => m.totalActions));
+        }
+
         return {
             totalGames,
             totalHours,
@@ -224,6 +358,8 @@ export function useGameStats(games: Game[], timeRange: TimeRange) {
             avgPlaytimeByGenre,
             hoursPerGame,
             avgRatingByPlatform,
+            activityTimeline,
+            timelineMaxActions,
         };
-    }, [games, timeRange]);
+    }, [games, timeRange, customStart, customEnd]);
 }
