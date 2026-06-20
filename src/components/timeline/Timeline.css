@@ -274,6 +274,10 @@
         padding-left: 0;
     }
 
+    .timeline-track::before {
+        display: none;
+    }
+
     .timeline-event::before {
         display: none;
     }

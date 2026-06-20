@@ -52,7 +52,7 @@
 .login-header .logo-text {
     font-size: 1.75rem;
     font-weight: 800;
-    background: linear-gradient(to right, var(--accent-blue), var(--accent-magenta));
+    background: linear-gradient(to right, #de4364, #a5304d);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

@@ -28,7 +28,7 @@
     - *Format Distributions*: Pie chart comparing physical, digital, and cloud ownership.
     - *Engagement Rankings*: Top 5 most played games, average rating per platform, and monthly spending over time.
 
-- 📅 **Gaming Timeline**
+- 📅 **Timeline**
   - Flat chronological timeline grouping non-backlog events (started or finished games) by month.
 
 - 📤 **Excel Export Service**

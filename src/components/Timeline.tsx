@@ -87,7 +87,7 @@ export const Timeline = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 style={{ margin: 0, fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <CalendarClock className="text-accent-blue" color="var(--accent-blue)" size={32} />
-                    Gaming Timeline
+                    Timeline
                 </h1>
                 <span className="game-section-count">{timelineEvents.length} Events</span>
             </div>
